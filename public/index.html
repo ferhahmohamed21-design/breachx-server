@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breach X - Admin Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Segoe UI',Tahoma,sans-serif;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a0a2e,#0d0d0d);padding:20px 40px;border-bottom:2px solid #7c3aed;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.header h1{font-size:24px;color:#a855f7}
+.header .user-info{display:flex;align-items:center;gap:12px}
+.header .user-info span{color:#a855f7;font-size:14px}
+.header .user-info button{padding:6px 16px;background:#991b1b;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px}
+.header .stats span{margin-left:12px;padding:6px 14px;background:#1a1a2e;border:1px solid #333;border-radius:8px;font-size:13px}
+.header .stats .green{color:#4ade80;border-color:#166534}
+.header .stats .yellow{color:#facc15;border-color:#854d0e}
+.header .stats .red{color:#f87171;border-color:#991b1b}
+.login-box{max-width:420px;margin:80px auto;padding:40px;background:#111;border:1px solid #333;border-radius:16px;text-align:center}
+.login-box h2{color:#a855f7;margin-bottom:24px;font-size:22px}
+.google-btn{display:inline-flex;align-items:center;gap:12px;padding:12px 28px;background:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;color:#333;transition:box-shadow 0.2s}
+.google-btn:hover{box-shadow:0 2px 12px rgba(168,85,247,0.4)}
+.google-btn svg{width:20px;height:20px}
+.main{max-width:1200px;margin:0 auto;padding:30px}
+.section{background:#111;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:24px}
+.section h2{color:#a855f7;margin-bottom:16px;font-size:18px}
+.gen-row{display:flex;gap:12px;margin-bottom:16px}
+.gen-row input{flex:1;padding:12px;background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#fff;font-size:14px}
+.gen-row button{padding:12px 24px;background:#7c3aed;border:none;border-radius:8px;color:#fff;cursor:pointer;font-weight:bold;white-space:nowrap}
+.gen-row button:hover{background:#6d28d9}
+.gen-row button.danger{background:#dc2626}
+.gen-row button.danger:hover{background:#b91c1c}
+.keys-list{max-height:400px;overflow-y:auto}
+.key-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #222;font-family:monospace;font-size:14px;gap:12px;flex-wrap:wrap}
+.key-item:hover{background:#1a1a2e}
+.key-item .code{color:#4ade80;flex:1;direction:ltr;text-align:left;min-width:200px}
+.key-item .hwid{color:#facc15;flex:1;font-size:12px;min-width:150px}
+.key-item .status{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold}
+.key-item .status.used{background:#166534;color:#4ade80}
+.key-item .status.free{background:#1e1b4b;color:#818cf8}
+.key-item .actions button{padding:4px 10px;border:none;border-radius:6px;cursor:pointer;font-size:11px;margin-left:4px}
+.key-item .actions .revoke{background:#854d0e;color:#facc15}
+.key-item .actions .delete{background:#991b1b;color:#fca5a5}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:10px;font-size:14px;z-index:999;animation:fadeIn 0.3s}
+.toast.ok{background:#166534;color:#4ade80;border:1px solid #22c55e}
+.toast.err{background:#991b1b;color:#fca5a5;border:1px solid #ef4444}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.hidden{display:none}
+.filter-row{display:flex;gap:8px;margin-bottom:12px}
+.filter-row button{padding:6px 16px;border:1px solid #444;background:#1a1a2e;color:#ccc;border-radius:6px;cursor:pointer}
+.filter-row button.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.logout-btn{padding:8px 20px;background:#991b1b;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:14px}
+.logout-btn:hover{background:#b91c1c}
+</style>
+</head>
+<body>
+
+<div class="login-box" id="loginBox">
+  <h2>Breach X Admin</h2>
+  <div id="googleSignIn">
+    <button class="google-btn" onclick="handleGoogleLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
+<div id="dashboard" class="hidden">
+  <div class="header">
+    <h1>Breach X - Key Manager</h1>
+    <div class="user-info">
+      <span id="userEmail"></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+    <div class="stats">
+      <span class="green" id="statTotal">Total: 0</span>
+      <span class="yellow" id="statUsed">Used: 0</span>
+      <span class="red" id="statFree">Free: 0</span>
+    </div>
+  </div>
+  <div class="main">
+    <div class="section">
+      <h2>Generate Keys</h2>
+      <div class="gen-row">
+        <input type="number" id="keyCount" placeholder="Number of keys" value="10" min="1" max="500">
+        <button onclick="generateKeys()">Generate</button>
+        <button class="danger" onclick="deleteAllUnused()">Delete All Unused</button>
+      </div>
+      <div id="newKeysBox" style="display:none;background:#1a1a2e;padding:14px;border-radius:8px;margin-top:12px;max-height:250px;overflow-y:auto;font-family:monospace;font-size:13px;color:#4ade80;direction:ltr;text-align:left;white-space:pre-line"></div>
+    </div>
+    <div class="section">
+      <h2>All Keys</h2>
+      <div class="filter-row">
+        <button class="active" onclick="filterKeys('all',this)">All</button>
+        <button onclick="filterKeys('used',this)">Used</button>
+        <button onclick="filterKeys('free',this)">Free</button>
+      </div>
+      <div class="keys-list" id="keysList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+let SESSION_TOKEN = localStorage.getItem('bx_session') || '';
+let allKeys = [];
+let currentFilter = 'all';
+
+function toast(msg, ok) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (ok ? 'ok' : 'err');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+async function api(path, body = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (SESSION_TOKEN) headers['x-session-token'] = SESSION_TOKEN;
+  const r = await fetch(path, {
+    method: body._get ? 'GET' : 'POST',
+    headers,
+    body: body._get ? undefined : JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function handleGoogleLogin() {
+    try {
+        const googleUser = await new Promise((resolve, reject) => {
+            const client = google.accounts.oauth2.initCodeClient({
+                client_id: '553558187438-il1bdg8rru2o1sedpur96ng0lv5takqb.apps.googleusercontent.com',
+                scope: 'email profile',
+                callback: (response) => {
+                    if (response.code) resolve(response.code);
+                    else reject('No code');
+                },
+            });
+            client.requestCode();
+        });
+        toast('Signing in...', true);
+    } catch(e) {
+        toast('Google login cancelled or failed', false);
+    }
+}
+
+async function handleCredentialResponse(response) {
+    const r = await api('/api/auth/google', {
+        credential: response.credential
+    });
+    if (!r.success) { toast(r.message, false); return; }
+
+    SESSION_TOKEN = r.token;
+    localStorage.setItem('bx_session', r.token);
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('userEmail').textContent = r.email;
+    loadKeys();
+}
+
+window.onload = function() {
+    google.accounts.id.initialize({
+        client_id: '553558187438-il1bdg8rru2o1sedpur96ng0lv5takqb.apps.googleusercontent.com',
+        callback: handleCredentialResponse
+    });
+    google.accounts.id.renderButton(
+        document.getElementById('googleSignIn'),
+        { theme: 'outline', size: 'large', width: 300 }
+    );
+    document.querySelector('.google-btn').style.display = 'none';
+
+    if (SESSION_TOKEN) {
+        checkSession();
+    }
+};
+
+async function checkSession() {
+    const r = await api('/api/auth/check', { token: SESSION_TOKEN });
+    if (r.success) {
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = r.email;
+        loadKeys();
+    } else {
+        SESSION_TOKEN = '';
+        localStorage.removeItem('bx_session');
+    }
+}
+
+async function doLogout() {
+    await api('/api/auth/logout', { token: SESSION_TOKEN });
+    SESSION_TOKEN = '';
+    localStorage.removeItem('bx_session');
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginBox').classList.remove('hidden');
+}
+
+async function loadKeys() {
+  const r = await api('/api/keys', { _get: true });
+  if (!r.success) { toast(r.message, false); return; }
+  allKeys = r.keys;
+  updateStats();
+  renderKeys();
+}
+
+async function updateStats() {
+  const r = await api('/api/stats', { _get: true });
+  if (r.success) {
+    document.getElementById('statTotal').textContent = 'Total: ' + r.total;
+    document.getElementById('statUsed').textContent = 'Used: ' + r.used;
+    document.getElementById('statFree').textContent = 'Free: ' + r.unused;
+  }
+}
+
+function renderKeys() {
+  const list = document.getElementById('keysList');
+  let filtered = allKeys;
+  if (currentFilter === 'used') filtered = allKeys.filter(k => k.is_used);
+  if (currentFilter === 'free') filtered = allKeys.filter(k => !k.is_used);
+  list.innerHTML = filtered.map(k => `
+    <div class="key-item">
+      <span class="code">${k.key_code}</span>
+      <span class="hwid">${k.is_used ? 'HWID: ' + k.hwid : 'Not used yet'}</span>
+      <span class="status ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'FREE'}</span>
+      <span class="actions">
+        ${k.is_used ? `<button class="revoke" onclick="revokeKey('${k.key_code}')">Revoke</button>` : ''}
+        <button class="delete" onclick="deleteKey('${k.key_code}')">Delete</button>
+      </span>
+    </div>
+  `).join('');
+}
+
+function filterKeys(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-row button').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderKeys();
+}
+
+async function generateKeys() {
+  const count = document.getElementById('keyCount').value;
+  const r = await api('/api/generate', { count: parseInt(count) });
+  if (!r.success) { toast(r.message, false); return; }
+  document.getElementById('newKeysBox').style.display = 'block';
+  document.getElementById('newKeysBox').textContent = r.keys.join('\n');
+  toast('Generated ' + r.keys.length + ' keys!', true);
+  loadKeys();
+}
+
+async function revokeKey(code) {
+  const r = await api('/api/revoke', { key_code: code });
+  toast(r.message, r.success);
+  loadKeys();
+}
+
+async function deleteKey(code) {
+  const r = await api('/api/delete', { key_code: code });
+  toast(r.message, r.success);
+  loadKeys();
+}
+
+async function deleteAllUnused() {
+  if (!confirm('Delete ALL unused keys?')) return;
+  const r = await api('/api/delete-all-unused', {});
+  toast(r.message, r.success);
+  loadKeys();
+}
+</script>
+</body>
+</html>

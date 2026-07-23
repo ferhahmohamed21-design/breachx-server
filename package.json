@@ -1,0 +1,13 @@
+{
+  "name": "breachx-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.9.0"
+  }
+}
