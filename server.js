@@ -117,6 +117,22 @@ app.post('/api/generate', (req, res) => {
     return res.json({ success: true, keys, mode: locked ? 'hwid' : 'all' });
 });
 
+app.post('/api/generate-custom', (req, res) => {
+    const session = requireSession(req);
+    if (!session) return res.json({ success: false, message: 'Not logged in' });
+
+    const { key, mode } = req.body;
+    if (!key || !key.trim()) return res.json({ success: false, message: 'No key provided' });
+
+    const code = key.trim().toUpperCase();
+    if (db.prepare('SELECT 1 FROM keys WHERE key_code = ?').get(code))
+        return res.json({ success: false, message: 'Key already exists' });
+
+    const locked = mode === 'hwid' ? 1 : 0;
+    db.prepare('INSERT INTO keys (key_code, hwid, locked) VALUES (?, ?, ?)').run(code, '', locked);
+    return res.json({ success: true, keys: [code], mode: locked ? 'hwid' : 'all' });
+});
+
 app.post('/api/revoke', (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
