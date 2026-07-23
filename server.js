@@ -247,6 +247,10 @@ app.get('/api/stats', async (req, res) => {
     });
 });
 
+app.get('/api/health', (req, res) => {
+    return res.json({ status: 'ok', ts: Date.now() });
+});
+
 initDB().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log('========================================');
@@ -254,6 +258,22 @@ initDB().then(() => {
         console.log('  Port: ' + PORT);
         console.log('  Database: Turso (persistent)');
         console.log('========================================');
+
+        // Keep Render free tier alive (spin-down after 15 min)
+        const SELF_URL = process.env.RENDER_EXTERNAL_URL;
+        if (SELF_URL) {
+            const http = require('http');
+            const https = require('https');
+            const client = SELF_URL.startsWith('https') ? https : http;
+            setInterval(() => {
+                client.get(SELF_URL + '/api/health', (r) => {
+                    console.log('[KEEPALIVE] ping OK ' + r.statusCode);
+                }).on('error', (e) => {
+                    console.error('[KEEPALIVE] ping failed:', e.message);
+                });
+            }, 10 * 60 * 1000); // every 10 minutes
+            console.log('  Keep-alive: ' + SELF_URL + ' (every 10 min)');
+        }
     });
 }).catch(err => {
     console.error('Failed to init DB:', err);
