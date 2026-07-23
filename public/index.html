@@ -92,6 +92,14 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .login-logo{width:80px;height:80px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-weight:800;font-size:32px;color:#fff;box-shadow:0 8px 40px rgba(124,58,237,0.4)}
 .login-box h2{font-size:28px;font-weight:700;background:linear-gradient(135deg,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
 .login-box p{color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:32px}
+.pass-input{width:100%;padding:14px 18px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:15px;font-family:'Inter',sans-serif;text-align:center;margin-bottom:16px;outline:none;transition:border-color 0.2s}
+.pass-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
+.pass-input::placeholder{color:rgba(255,255,255,0.3)}
+.pass-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 15px rgba(124,58,237,0.3);transition:all 0.2s;margin-bottom:24px}
+.pass-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.4)}
+.pass-divider{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.pass-divider::before,.pass-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
+.pass-divider span{color:rgba(255,255,255,0.25);font-size:12px;white-space:nowrap}
 .google-signin-container{display:flex;justify-content:center}
 .google-signin-container iframe{border-radius:12px !important}
 .login-footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);font-size:12px}
@@ -113,7 +121,14 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
     <div class="login-logo">BX</div>
     <h2>Breach X</h2>
     <p>Key Management System</p>
-    <div class="google-signin-container" id="googleSignIn"></div>
+    <div id="passSection">
+      <input type="password" class="pass-input" id="passInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()">
+      <button class="pass-btn" onclick="checkPassword()">Continue</button>
+    </div>
+    <div id="googleSection" class="hidden">
+      <div class="pass-divider"><span>OR sign in with Google</span></div>
+      <div class="google-signin-container" id="googleSignIn"></div>
+    </div>
     <div class="login-footer">Secure Admin Panel</div>
   </div>
 </div>
@@ -175,6 +190,21 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 let SESSION_TOKEN = localStorage.getItem('bx_session') || '';
 let allKeys = [];
 let currentFilter = 'all';
+const SITE_PASS = '@lioux@breach202600';
+
+function checkPassword() {
+  const input = document.getElementById('passInput').value;
+  if (input === SITE_PASS) {
+    localStorage.setItem('bx_pass_ok', '1');
+    document.getElementById('passSection').classList.add('hidden');
+    document.getElementById('googleSection').classList.remove('hidden');
+  } else {
+    toast('Wrong password', false);
+    document.getElementById('passInput').value = '';
+    document.getElementById('passInput').style.borderColor = '#ef4444';
+    setTimeout(() => document.getElementById('passInput').style.borderColor = '', 1500);
+  }
+}
 
 function toast(msg, ok) {
   const t = document.createElement('div');
@@ -215,6 +245,10 @@ window.onload = function() {
         document.getElementById('googleSignIn'),
         { theme: 'filled_blue', size: 'large', width: 280, shape: 'pill', text: 'signin_with' }
     );
+    if (localStorage.getItem('bx_pass_ok') === '1') {
+        document.getElementById('passSection').classList.add('hidden');
+        document.getElementById('googleSection').classList.remove('hidden');
+    }
     if (SESSION_TOKEN) checkSession();
 };
 
