@@ -100,7 +100,7 @@ app.post('/api/generate', (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { count, mode, hwid } = req.body;
+    const { count, mode } = req.body;
     const n = Math.min(Math.max(parseInt(count) || 1, 1), 500);
     const locked = mode === 'hwid' ? 1 : 0;
     const keys = [];
@@ -110,7 +110,7 @@ app.post('/api/generate', (req, res) => {
         let code;
         do { code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-'; }
         while (db.prepare('SELECT 1 FROM keys WHERE key_code = ?').get(code));
-        insert.run(code, locked ? (hwid || '') : '', locked);
+        insert.run(code, '', locked);
         keys.push(code);
     }
 
