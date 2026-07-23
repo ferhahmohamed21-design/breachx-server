@@ -134,7 +134,6 @@ app.post('/api/generate', async (req, res) => {
     const { count, mode, expireMs, group } = req.body;
     const n = Math.min(Math.max(parseInt(count) || 1, 1), 500);
     const locked = mode === 'hwid' ? 1 : 0;
-    const keys = [];
     const groupName = (group || '').trim();
 
     let expireAt = '';
