@@ -3,6 +3,7 @@ const { createClient } = require('@libsql/client');
 const crypto = require('crypto');
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
+const { startBot, setTurso } = require('./discord-bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -259,6 +260,9 @@ app.get('/api/health', (req, res) => {
 });
 
 initDB().then(() => {
+    setTurso(turso);
+    startBot();
+
     app.listen(PORT, '0.0.0.0', () => {
         const dbType = DB_URL ? 'Turso (persistent cloud)' : 'LOCAL FILE (NOT persistent!)';
         console.log('========================================');
