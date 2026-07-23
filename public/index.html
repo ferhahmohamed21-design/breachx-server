@@ -4,96 +4,166 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breach X - Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#e0e0e0;font-family:'Segoe UI',Tahoma,sans-serif;min-height:100vh}
-.header{background:linear-gradient(135deg,#1a0a2e,#0d0d0d);padding:20px 40px;border-bottom:2px solid #7c3aed;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.header h1{font-size:24px;color:#a855f7}
-.header .user-info{display:flex;align-items:center;gap:12px}
-.header .user-info span{color:#a855f7;font-size:14px}
-.header .user-info button{padding:6px 16px;background:#991b1b;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px}
-.header .stats span{margin-left:12px;padding:6px 14px;background:#1a1a2e;border:1px solid #333;border-radius:8px;font-size:13px}
-.header .stats .green{color:#4ade80;border-color:#166534}
-.header .stats .yellow{color:#facc15;border-color:#854d0e}
-.header .stats .red{color:#f87171;border-color:#991b1b}
-.login-box{max-width:420px;margin:80px auto;padding:40px;background:#111;border:1px solid #333;border-radius:16px;text-align:center}
-.login-box h2{color:#a855f7;margin-bottom:24px;font-size:22px}
-.google-btn{display:inline-flex;align-items:center;gap:12px;padding:12px 28px;background:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;color:#333;transition:box-shadow 0.2s}
-.google-btn:hover{box-shadow:0 2px 12px rgba(168,85,247,0.4)}
-.google-btn svg{width:20px;height:20px}
-.main{max-width:1200px;margin:0 auto;padding:30px}
-.section{background:#111;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:24px}
-.section h2{color:#a855f7;margin-bottom:16px;font-size:18px}
-.gen-row{display:flex;gap:12px;margin-bottom:16px}
-.gen-row input{flex:1;padding:12px;background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#fff;font-size:14px}
-.gen-row button{padding:12px 24px;background:#7c3aed;border:none;border-radius:8px;color:#fff;cursor:pointer;font-weight:bold;white-space:nowrap}
-.gen-row button:hover{background:#6d28d9}
-.gen-row button.danger{background:#dc2626}
-.gen-row button.danger:hover{background:#b91c1c}
-.keys-list{max-height:400px;overflow-y:auto}
-.key-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #222;font-family:monospace;font-size:14px;gap:12px;flex-wrap:wrap}
-.key-item:hover{background:#1a1a2e}
-.key-item .code{color:#4ade80;flex:1;direction:ltr;text-align:left;min-width:200px}
-.key-item .hwid{color:#facc15;flex:1;font-size:12px;min-width:150px}
-.key-item .status{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold}
-.key-item .status.used{background:#166534;color:#4ade80}
-.key-item .status.free{background:#1e1b4b;color:#818cf8}
-.key-item .actions button{padding:4px 10px;border:none;border-radius:6px;cursor:pointer;font-size:11px;margin-left:4px}
-.key-item .actions .revoke{background:#854d0e;color:#facc15}
-.key-item .actions .delete{background:#991b1b;color:#fca5a5}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:10px;font-size:14px;z-index:999;animation:fadeIn 0.3s}
-.toast.ok{background:#166534;color:#4ade80;border:1px solid #22c55e}
-.toast.err{background:#991b1b;color:#fca5a5;border:1px solid #ef4444}
-@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+body{background:#050510;color:#e0e0e0;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 20%,rgba(124,58,237,0.08) 0%,transparent 50%),radial-gradient(circle at 70% 80%,rgba(168,85,247,0.05) 0%,transparent 50%);z-index:-1;animation:bgPulse 15s ease-in-out infinite alternate}
+@keyframes bgPulse{0%{transform:translate(0,0)}100%{transform:translate(-3%,-2%)}}
+
+.glass{background:rgba(17,17,30,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(124,58,237,0.15);border-radius:20px}
+
+.header{padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;border-bottom:1px solid rgba(124,58,237,0.1);background:rgba(5,5,16,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:10}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo{width:42px;height:42px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;align-items:center;gap:16px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:12px;font-size:13px;color:#a78bfa}
+.user-chip svg{width:16px;height:16px;fill:#a78bfa}
+.logout-btn{padding:8px 18px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;color:#f87171;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s}
+.logout-btn:hover{background:rgba(239,68,68,0.25);border-color:#ef4444}
+
+.stats-bar{display:flex;gap:12px;padding:24px 32px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:140px;padding:20px;border-radius:16px;text-align:center;transition:transform 0.2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card.total{background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.2)}
+.stat-card.used{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2)}
+.stat-card.free{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)}
+.stat-card .num{font-size:32px;font-weight:800;margin-bottom:4px}
+.stat-card.total .num{color:#a78bfa}
+.stat-card.used .num{color:#4ade80}
+.stat-card.free .num{color:#818cf8}
+.stat-card .label{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.6}
+
+.main{max-width:1200px;margin:0 auto;padding:0 32px 40px}
+.section{padding:28px;margin-bottom:24px}
+.section-title{font-size:16px;font-weight:600;color:#c4b5fd;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#7c3aed,#a855f7);border-radius:4px}
+
+.gen-row{display:flex;gap:10px;margin-bottom:16px}
+.gen-row input{flex:1;padding:14px 18px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:15px;font-family:'Inter',sans-serif;transition:border-color 0.2s;outline:none}
+.gen-row input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
+.gen-row input::placeholder{color:rgba(255,255,255,0.3)}
+.btn{padding:14px 24px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 15px rgba(124,58,237,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.4)}
+.btn-danger{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+.btn-danger:hover{background:rgba(239,68,68,0.25)}
+
+.new-keys-box{display:none;padding:18px;border-radius:12px;margin-top:16px;max-height:280px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;color:#4ade80;direction:ltr;text-align:left;white-space:pre-line;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);line-height:1.8}
+.new-keys-box::-webkit-scrollbar{width:6px}
+.new-keys-box::-webkit-scrollbar-track{background:transparent}
+.new-keys-box::-webkit-scrollbar-thumb{background:rgba(34,197,94,0.3);border-radius:3px}
+
+.filter-row{display:flex;gap:6px;margin-bottom:16px}
+.filter-btn{padding:8px 18px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;font-family:'Inter',sans-serif}
+.filter-btn.active{background:rgba(124,58,237,0.2);border-color:rgba(124,58,237,0.4);color:#a78bfa}
+.filter-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
+
+.keys-list{max-height:450px;overflow-y:auto}
+.keys-list::-webkit-scrollbar{width:6px}
+.keys-list::-webkit-scrollbar-track{background:transparent}
+.keys-list::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:3px}
+
+.key-item{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.05);gap:12px;flex-wrap:wrap;transition:background 0.15s}
+.key-item:last-child{border-bottom:none}
+.key-item:hover{background:rgba(124,58,237,0.05)}
+.key-item .code{color:#4ade80;font-family:'Courier New',monospace;font-size:14px;font-weight:600;direction:ltr;text-align:left;min-width:220px;flex:1}
+.key-item .hwid{color:rgba(250,204,21,0.8);font-size:12px;min-width:150px;flex:1;font-family:'Courier New',monospace;direction:ltr}
+.key-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px}
+.key-badge.used{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
+.key-badge.free{background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.2)}
+.key-actions{display:flex;gap:6px}
+.key-actions button{padding:5px 12px;border:none;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.15s;font-family:'Inter',sans-serif}
+.key-actions .revoke{background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
+.key-actions .revoke:hover{background:rgba(250,204,21,0.2)}
+.key-actions .delete{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+.key-actions .delete:hover{background:rgba(239,68,68,0.2)}
+
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-size:14px;font-weight:500;z-index:999;animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px)}
+.toast.ok{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3);box-shadow:0 8px 30px rgba(34,197,94,0.15)}
+.toast.err{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);box-shadow:0 8px 30px rgba(239,68,68,0.15)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px) scale(0.95)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 .hidden{display:none}
-.filter-row{display:flex;gap:8px;margin-bottom:12px}
-.filter-row button{padding:6px 16px;border:1px solid #444;background:#1a1a2e;color:#ccc;border-radius:6px;cursor:pointer}
-.filter-row button.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
-.logout-btn{padding:8px 20px;background:#991b1b;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:14px}
-.logout-btn:hover{background:#b91c1c}
+
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{max-width:440px;width:100%;padding:48px 40px;text-align:center}
+.login-logo{width:80px;height:80px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-weight:800;font-size:32px;color:#fff;box-shadow:0 8px 40px rgba(124,58,237,0.4)}
+.login-box h2{font-size:28px;font-weight:700;background:linear-gradient(135deg,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.login-box p{color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:32px}
+.google-signin-container{display:flex;justify-content:center}
+.google-signin-container iframe{border-radius:12px !important}
+.login-footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);font-size:12px}
+
+@media(max-width:768px){
+  .header{padding:16px 20px}
+  .stats-bar{padding:16px 20px}
+  .main{padding:0 20px 30px}
+  .stat-card .num{font-size:24px}
+  .key-item{flex-direction:column;align-items:flex-start}
+  .key-item .code,.key-item .hwid{min-width:auto}
+}
 </style>
 </head>
 <body>
 
-<div class="login-box" id="loginBox">
-  <h2>Breach X Admin</h2>
-  <div id="googleSignIn">
-    <button class="google-btn" onclick="handleGoogleLogin()">
-      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Sign in with Google
-    </button>
+<div class="login-page" id="loginBox">
+  <div class="login-box glass">
+    <div class="login-logo">BX</div>
+    <h2>Breach X</h2>
+    <p>Key Management System</p>
+    <div class="google-signin-container" id="googleSignIn"></div>
+    <div class="login-footer">Secure Admin Panel</div>
   </div>
 </div>
 
 <div id="dashboard" class="hidden">
   <div class="header">
-    <h1>Breach X - Key Manager</h1>
-    <div class="user-info">
-      <span id="userEmail"></span>
+    <div class="header-left">
+      <div class="logo">BX</div>
+      <h1>Breach X - Key Manager</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-chip">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span id="userEmail"></span>
+      </div>
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
-    <div class="stats">
-      <span class="green" id="statTotal">Total: 0</span>
-      <span class="yellow" id="statUsed">Used: 0</span>
-      <span class="red" id="statFree">Free: 0</span>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card total glass">
+      <div class="num" id="statTotal">0</div>
+      <div class="label">Total Keys</div>
+    </div>
+    <div class="stat-card used glass">
+      <div class="num" id="statUsed">0</div>
+      <div class="label">Used</div>
+    </div>
+    <div class="stat-card free glass">
+      <div class="num" id="statFree">0</div>
+      <div class="label">Available</div>
     </div>
   </div>
+
   <div class="main">
-    <div class="section">
-      <h2>Generate Keys</h2>
+    <div class="section glass">
+      <div class="section-title">Generate New Keys</div>
       <div class="gen-row">
-        <input type="number" id="keyCount" placeholder="Number of keys" value="10" min="1" max="500">
-        <button onclick="generateKeys()">Generate</button>
-        <button class="danger" onclick="deleteAllUnused()">Delete All Unused</button>
+        <input type="number" id="keyCount" placeholder="How many keys?" value="10" min="1" max="500">
+        <button class="btn btn-primary" onclick="generateKeys()">Generate</button>
+        <button class="btn btn-danger" onclick="deleteAllUnused()">Delete All Unused</button>
       </div>
-      <div id="newKeysBox" style="display:none;background:#1a1a2e;padding:14px;border-radius:8px;margin-top:12px;max-height:250px;overflow-y:auto;font-family:monospace;font-size:13px;color:#4ade80;direction:ltr;text-align:left;white-space:pre-line"></div>
+      <div class="new-keys-box" id="newKeysBox"></div>
     </div>
-    <div class="section">
-      <h2>All Keys</h2>
+    <div class="section glass">
+      <div class="section-title">All Keys</div>
       <div class="filter-row">
-        <button class="active" onclick="filterKeys('all',this)">All</button>
-        <button onclick="filterKeys('used',this)">Used</button>
-        <button onclick="filterKeys('free',this)">Free</button>
+        <button class="filter-btn active" onclick="filterKeys('all',this)">All</button>
+        <button class="filter-btn" onclick="filterKeys('used',this)">Used</button>
+        <button class="filter-btn" onclick="filterKeys('free',this)">Available</button>
       </div>
       <div class="keys-list" id="keysList"></div>
     </div>
@@ -125,31 +195,9 @@ async function api(path, body = {}) {
   return r.json();
 }
 
-async function handleGoogleLogin() {
-    try {
-        const googleUser = await new Promise((resolve, reject) => {
-            const client = google.accounts.oauth2.initCodeClient({
-                client_id: '553558187438-il1bdg8rru2o1sedpur96ng0lv5takqb.apps.googleusercontent.com',
-                scope: 'email profile',
-                callback: (response) => {
-                    if (response.code) resolve(response.code);
-                    else reject('No code');
-                },
-            });
-            client.requestCode();
-        });
-        toast('Signing in...', true);
-    } catch(e) {
-        toast('Google login cancelled or failed', false);
-    }
-}
-
 async function handleCredentialResponse(response) {
-    const r = await api('/api/auth/google', {
-        credential: response.credential
-    });
+    const r = await api('/api/auth/google', { credential: response.credential });
     if (!r.success) { toast(r.message, false); return; }
-
     SESSION_TOKEN = r.token;
     localStorage.setItem('bx_session', r.token);
     document.getElementById('loginBox').classList.add('hidden');
@@ -165,13 +213,9 @@ window.onload = function() {
     });
     google.accounts.id.renderButton(
         document.getElementById('googleSignIn'),
-        { theme: 'outline', size: 'large', width: 300 }
+        { theme: 'filled_blue', size: 'large', width: 280, shape: 'pill', text: 'signin_with' }
     );
-    document.querySelector('.google-btn').style.display = 'none';
-
-    if (SESSION_TOKEN) {
-        checkSession();
-    }
+    if (SESSION_TOKEN) checkSession();
 };
 
 async function checkSession() {
@@ -206,9 +250,9 @@ async function loadKeys() {
 async function updateStats() {
   const r = await api('/api/stats', { _get: true });
   if (r.success) {
-    document.getElementById('statTotal').textContent = 'Total: ' + r.total;
-    document.getElementById('statUsed').textContent = 'Used: ' + r.used;
-    document.getElementById('statFree').textContent = 'Free: ' + r.unused;
+    document.getElementById('statTotal').textContent = r.total;
+    document.getElementById('statUsed').textContent = r.used;
+    document.getElementById('statFree').textContent = r.unused;
   }
 }
 
@@ -217,22 +261,23 @@ function renderKeys() {
   let filtered = allKeys;
   if (currentFilter === 'used') filtered = allKeys.filter(k => k.is_used);
   if (currentFilter === 'free') filtered = allKeys.filter(k => !k.is_used);
+  if (!filtered.length) { list.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.2);font-size:14px">No keys found</div>'; return; }
   list.innerHTML = filtered.map(k => `
     <div class="key-item">
       <span class="code">${k.key_code}</span>
-      <span class="hwid">${k.is_used ? 'HWID: ' + k.hwid : 'Not used yet'}</span>
-      <span class="status ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'FREE'}</span>
-      <span class="actions">
+      <span class="hwid">${k.is_used ? k.hwid : '—'}</span>
+      <span class="key-badge ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'AVAILABLE'}</span>
+      <div class="key-actions">
         ${k.is_used ? `<button class="revoke" onclick="revokeKey('${k.key_code}')">Revoke</button>` : ''}
         <button class="delete" onclick="deleteKey('${k.key_code}')">Delete</button>
-      </span>
+      </div>
     </div>
   `).join('');
 }
 
 function filterKeys(f, el) {
   currentFilter = f;
-  document.querySelectorAll('.filter-row button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   renderKeys();
 }
@@ -241,8 +286,9 @@ async function generateKeys() {
   const count = document.getElementById('keyCount').value;
   const r = await api('/api/generate', { count: parseInt(count) });
   if (!r.success) { toast(r.message, false); return; }
-  document.getElementById('newKeysBox').style.display = 'block';
-  document.getElementById('newKeysBox').textContent = r.keys.join('\n');
+  const box = document.getElementById('newKeysBox');
+  box.style.display = 'block';
+  box.textContent = r.keys.join('\n');
   toast('Generated ' + r.keys.length + ' keys!', true);
   loadKeys();
 }
