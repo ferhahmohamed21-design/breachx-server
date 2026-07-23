@@ -10,16 +10,19 @@ const PORT = process.env.PORT || 3000;
 const GOOGLE_CLIENT_ID = '553558187438-il1bdg8rru2o1sedpur96ng0lv5takqb.apps.googleusercontent.com';
 const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const DB_PATH = path.join(__dirname, 'keys.db');
+const HMAC_SECRET = process.env.HMAC_SECRET || 'bx-' + (process.env.RENDER_SERVICE_ID || 'local-secret-key-2026');
+const SESSION_EXPIRY = 30 * 24 * 60 * 60 * 1000;
 
 let db;
 
 function saveDB() {
-    const data = db.export();
-    fs.writeFileSync(DB_PATH, Buffer.from(data));
+    try {
+        const data = db.export();
+        fs.writeFileSync(DB_PATH, Buffer.from(data));
+    } catch (e) {}
 }
 
-setInterval(saveDB, 30000);
-
+setInterval(saveDB, 10000);
 process.on('SIGINT', () => { saveDB(); process.exit(); });
 process.on('SIGTERM', () => { saveDB(); process.exit(); });
 
@@ -40,11 +43,6 @@ async function initDB() {
         created_at TEXT DEFAULT (datetime('now')),
         used_at TEXT DEFAULT ''
     )`);
-    db.run(`CREATE TABLE IF NOT EXISTS sessions (
-        token TEXT PRIMARY KEY,
-        email TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
-    )`);
     saveDB();
 }
 
@@ -55,8 +53,25 @@ function generateKeyCode() {
     return code;
 }
 
-function generateSessionToken() {
-    return crypto.randomBytes(32).toString('hex');
+function createSessionToken(email) {
+    const payload = JSON.stringify({ email, exp: Date.now() + SESSION_EXPIRY });
+    const encoded = Buffer.from(payload).toString('base64url');
+    const sig = crypto.createHmac('sha256', HMAC_SECRET).update(encoded).digest('base64url');
+    return encoded + '.' + sig;
+}
+
+function verifySessionToken(token) {
+    try {
+        const [encoded, sig] = token.split('.');
+        if (!encoded || !sig) return null;
+        const expected = crypto.createHmac('sha256', HMAC_SECRET).update(encoded).digest('base64url');
+        if (sig !== expected) return null;
+        const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString());
+        if (Date.now() > payload.exp) return null;
+        return payload;
+    } catch (e) {
+        return null;
+    }
 }
 
 function dbGet(sql, params = []) {
@@ -103,8 +118,7 @@ app.post('/api/auth/google', async (req, res) => {
         if (!credential) return res.json({ success: false, message: 'No credential' });
         const ticket = await oAuth2Client.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
         const payload = ticket.getPayload();
-        const token = generateSessionToken();
-        dbRun('INSERT INTO sessions (token, email) VALUES (?, ?)', [token, payload.email]);
+        const token = createSessionToken(payload.email);
         return res.json({ success: true, token, email: payload.email, name: payload.name });
     } catch (e) {
         return res.json({ success: false, message: 'Invalid Google token' });
@@ -114,21 +128,19 @@ app.post('/api/auth/google', async (req, res) => {
 app.post('/api/auth/check', (req, res) => {
     const { token } = req.body;
     if (!token) return res.json({ success: false });
-    const row = dbGet('SELECT * FROM sessions WHERE token = ?', [token]);
-    if (!row) return res.json({ success: false });
-    return res.json({ success: true, email: row.email });
+    const payload = verifySessionToken(token);
+    if (!payload) return res.json({ success: false });
+    return res.json({ success: true, email: payload.email });
 });
 
 app.post('/api/auth/logout', (req, res) => {
-    const { token } = req.body;
-    if (token) dbRun('DELETE FROM sessions WHERE token = ?', [token]);
     return res.json({ success: true });
 });
 
 function requireSession(req) {
     const token = req.headers['x-session-token'];
     if (!token) return null;
-    return dbGet('SELECT * FROM sessions WHERE token = ?', [token]) || null;
+    return verifySessionToken(token);
 }
 
 app.post('/api/validate', (req, res) => {
@@ -239,7 +251,8 @@ initDB().then(() => {
         console.log('========================================');
         console.log('  Breach X Key Server');
         console.log('  Port: ' + PORT);
-        console.log('  Database: sql.js (no native deps)');
+        console.log('  Sessions: HMAC-signed (no DB)');
+        console.log('  Keys: sql.js + file');
         console.log('========================================');
     });
 }).catch(err => {

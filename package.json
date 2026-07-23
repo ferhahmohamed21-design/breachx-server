@@ -6,7 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^5.2.1",
+    "express": "^4.21.0",
     "google-auth-library": "^10.9.0",
     "sql.js": "^1.14.1"
   }
