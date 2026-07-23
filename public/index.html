@@ -93,6 +93,25 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .key-actions .revoke{background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
 .key-actions .delete{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
 
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s}
+.modal{max-width:420px;width:90%;padding:32px;text-align:center;animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1)}
+.modal h3{font-size:18px;font-weight:700;color:#c4b5fd;margin-bottom:6px}
+.modal p{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px}
+.expire-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px}
+.expire-row input{width:64px;padding:12px 8px;text-align:center;background:rgba(30,27,75,0.6);border:1px solid rgba(124,58,237,0.25);border-radius:10px;color:#fff;font-size:20px;font-weight:700;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+.expire-row input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
+.expire-row input::placeholder{color:rgba(255,255,255,0.15);font-size:14px;font-weight:400}
+.expire-row .sep{color:rgba(255,255,255,0.15);font-size:22px;font-weight:300}
+.expire-row .unit{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-top:4px;text-align:center}
+.expire-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.modal-btns{display:flex;gap:10px;justify-content:center}
+.modal-btns .btn{min-width:100px}
+.btn-ghost{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)}
+.btn-ghost:hover{background:rgba(255,255,255,0.1)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:13px;font-weight:500;z-index:999;animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px)}
 .toast.ok{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
 .toast.err{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
@@ -120,6 +139,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
   .main{padding:0 16px 30px}
   .stat-card .num{font-size:22px}
   .key-item{flex-direction:column;align-items:flex-start}
+  .expire-row input{width:50px;font-size:16px}
 }
 </style>
 </head>
@@ -183,14 +203,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
         <div class="gen-top">
           <input type="number" id="keyCount" placeholder="Number of keys" value="10" min="1" max="500">
           <input type="text" id="customKeyInput" placeholder="BreachX-Safe-OB54-XXXX-" style="display:none;flex:2;min-width:300px;text-transform:uppercase" maxlength="30">
-          <input type="number" id="expireValue" placeholder="Expire" value="" min="1" style="max-width:90px">
-          <select id="expireUnit" style="padding:12px 10px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;outline:none;cursor:pointer">
-            <option value="seconds">Seconds</option>
-            <option value="minutes">Minutes</option>
-            <option value="hours">Hours</option>
-            <option value="days" selected>Days</option>
-          </select>
-          <button class="btn btn-primary" onclick="generateKeys()">Generate</button>
+          <button class="btn btn-primary" onclick="openExpireModal()">Generate</button>
           <button class="btn btn-danger" onclick="deleteAllUnused()">Delete Unused</button>
         </div>
         <div class="new-keys-box" id="newKeysBox"></div>
@@ -210,6 +223,38 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
         </div>
         <div class="keys-list" id="keysList"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="expireModal" onclick="if(event.target===this)closeExpireModal()">
+  <div class="modal glass">
+    <h3>Key Expiry</h3>
+    <p>Set how long the key stays active</p>
+    <div class="expire-row">
+      <div class="expire-col">
+        <input type="number" id="expD" placeholder="0" min="0" max="365">
+        <span class="unit">Days</span>
+      </div>
+      <span class="sep">/</span>
+      <div class="expire-col">
+        <input type="number" id="expH" placeholder="0" min="0" max="23">
+        <span class="unit">Hours</span>
+      </div>
+      <span class="sep">/</span>
+      <div class="expire-col">
+        <input type="number" id="expM" placeholder="0" min="0" max="59">
+        <span class="unit">Min</span>
+      </div>
+      <span class="sep">/</span>
+      <div class="expire-col">
+        <input type="number" id="expS" placeholder="0" min="0" max="59">
+        <span class="unit">Sec</span>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="generateWithExpiry(true)">No Limit</button>
+      <button class="btn btn-primary" onclick="generateWithExpiry(false)">Generate</button>
     </div>
   </div>
 </div>
@@ -276,6 +321,63 @@ async function api(path, body = {}) {
     body: body._get ? undefined : JSON.stringify(body)
   });
   return r.json();
+}
+
+function openExpireModal() {
+  document.getElementById('expD').value = '';
+  document.getElementById('expH').value = '';
+  document.getElementById('expM').value = '';
+  document.getElementById('expS').value = '';
+  document.getElementById('expireModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('expD').focus(), 100);
+}
+
+function closeExpireModal() {
+  document.getElementById('expireModal').classList.add('hidden');
+}
+
+function generateWithExpiry(noLimit) {
+  let d = 0, h = 0, m = 0, s = 0;
+  if (!noLimit) {
+    d = parseInt(document.getElementById('expD').value) || 0;
+    h = parseInt(document.getElementById('expH').value) || 0;
+    m = parseInt(document.getElementById('expM').value) || 0;
+    s = parseInt(document.getElementById('expS').value) || 0;
+    if (d === 0 && h === 0 && m === 0 && s === 0) {
+      toast('Set a time or press No Limit', false);
+      return;
+    }
+  }
+  closeExpireModal();
+  doGenerate(d, h, m, s);
+}
+
+async function doGenerate(d, h, m, s) {
+  let expireValue = 0, expireUnit = '';
+  const totalMs = ((d * 86400) + (h * 3600) + (m * 60) + s) * 1000;
+  if (totalMs > 0) { expireValue = totalMs; expireUnit = 'ms'; }
+
+  if (currentMode === 'custom') {
+    const customKey = document.getElementById('customKeyInput').value.trim().toUpperCase();
+    if (!customKey) { toast('Enter a key', false); return; }
+    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid', expireMs: expireValue });
+    if (!r.success) { toast(r.message, false); return; }
+    const box = document.getElementById('newKeysBox');
+    box.style.display = 'block';
+    box.textContent = r.keys.join('\n');
+    toast('Key added successfully', true);
+    document.getElementById('customKeyInput').value = '';
+    updateStats();
+    return;
+  }
+  const count = document.getElementById('keyCount').value;
+  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, expireMs: expireValue });
+  if (!r.success) { toast(r.message, false); return; }
+  const box = document.getElementById('newKeysBox');
+  box.style.display = 'block';
+  box.textContent = r.keys.join('\n');
+  toast('Generated ' + r.keys.length + ' keys', true);
+  updateStats();
 }
 
 async function handleCredentialResponse(response) {
@@ -372,11 +474,11 @@ function renderKeys() {
       if (isExpired) { expireText = 'EXPIRED'; expireClass = 'expired-badge'; }
       else {
         const diff = new Date(k.expire_at).getTime() - Date.now();
-        const s = Math.floor(diff/1000), m = Math.floor(s/60), h = Math.floor(m/60), d = Math.floor(h/24);
-        if (d > 0) expireText = d + 'd ' + (h%24) + 'h';
-        else if (h > 0) expireText = h + 'h ' + (m%60) + 'm';
-        else if (m > 0) expireText = m + 'm ' + (s%60) + 's';
-        else expireText = s + 's';
+        const ss = Math.floor(diff/1000), mm = Math.floor(ss/60), hh = Math.floor(mm/60), dd = Math.floor(hh/24);
+        if (dd > 0) expireText = dd + 'd ' + (hh%24) + 'h';
+        else if (hh > 0) expireText = hh + 'h ' + (mm%60) + 'm';
+        else if (mm > 0) expireText = mm + 'm ' + (ss%60) + 's';
+        else expireText = ss + 's';
         expireClass = 'expire-badge';
       }
     }
@@ -403,32 +505,6 @@ function filterKeys(f, el) {
 }
 
 setInterval(() => { if (allKeys.length && !document.getElementById('tabKeys').classList.contains('hidden')) renderKeys(); }, 1000);
-
-async function generateKeys() {
-  const expireValue = document.getElementById('expireValue').value;
-  const expireUnit = document.getElementById('expireUnit').value;
-  if (currentMode === 'custom') {
-    const customKey = document.getElementById('customKeyInput').value.trim().toUpperCase();
-    if (!customKey) { toast('Enter a key', false); return; }
-    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid', expireValue, expireUnit });
-    if (!r.success) { toast(r.message, false); return; }
-    const box = document.getElementById('newKeysBox');
-    box.style.display = 'block';
-    box.textContent = r.keys.join('\n');
-    toast('Key added successfully', true);
-    document.getElementById('customKeyInput').value = '';
-    updateStats();
-    return;
-  }
-  const count = document.getElementById('keyCount').value;
-  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, expireValue, expireUnit });
-  if (!r.success) { toast(r.message, false); return; }
-  const box = document.getElementById('newKeysBox');
-  box.style.display = 'block';
-  box.textContent = r.keys.join('\n');
-  toast('Generated ' + r.keys.length + ' keys (' + (r.mode === 'hwid' ? 'One Device' : 'All Devices') + ')', true);
-  updateStats();
-}
 
 async function revokeKey(code) {
   const r = await api('/api/revoke', { key_code: code });

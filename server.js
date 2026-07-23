@@ -121,17 +121,14 @@ app.post('/api/generate', async (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { count, mode, expireValue, expireUnit } = req.body;
+    const { count, mode, expireMs } = req.body;
     const n = Math.min(Math.max(parseInt(count) || 1, 1), 500);
     const locked = mode === 'hwid' ? 1 : 0;
     const keys = [];
 
     let expireAt = '';
-    if (expireValue && expireUnit) {
-        const ms = parseInt(expireValue) * ({
-            seconds: 1000, minutes: 60000, hours: 3600000, days: 86400000
-        }[expireUnit] || 0);
-        if (ms > 0) expireAt = new Date(Date.now() + ms).toISOString();
+    if (expireMs && parseInt(expireMs) > 0) {
+        expireAt = new Date(Date.now() + parseInt(expireMs)).toISOString();
     }
 
     for (let i = 0; i < n; i++) {
@@ -153,7 +150,7 @@ app.post('/api/generate-custom', async (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { key, mode, expireValue, expireUnit } = req.body;
+    const { key, mode, expireMs } = req.body;
     if (!key || !key.trim()) return res.json({ success: false, message: 'No key provided' });
 
     const code = key.trim().toUpperCase();
@@ -161,11 +158,8 @@ app.post('/api/generate-custom', async (req, res) => {
     if (exists.rows.length > 0) return res.json({ success: false, message: 'Key already exists' });
 
     let expireAt = '';
-    if (expireValue && expireUnit) {
-        const ms = parseInt(expireValue) * ({
-            seconds: 1000, minutes: 60000, hours: 3600000, days: 86400000
-        }[expireUnit] || 0);
-        if (ms > 0) expireAt = new Date(Date.now() + ms).toISOString();
+    if (expireMs && parseInt(expireMs) > 0) {
+        expireAt = new Date(Date.now() + parseInt(expireMs)).toISOString();
     }
 
     const locked = mode === 'hwid' ? 1 : 0;
