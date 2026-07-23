@@ -8,84 +8,95 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#050510;color:#e0e0e0;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
-
 body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 20%,rgba(124,58,237,0.08) 0%,transparent 50%),radial-gradient(circle at 70% 80%,rgba(168,85,247,0.05) 0%,transparent 50%);z-index:-1;animation:bgPulse 15s ease-in-out infinite alternate}
 @keyframes bgPulse{0%{transform:translate(0,0)}100%{transform:translate(-3%,-2%)}}
-
 .glass{background:rgba(17,17,30,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(124,58,237,0.15);border-radius:20px}
+.hidden{display:none}
 
-.header{padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;border-bottom:1px solid rgba(124,58,237,0.1);background:rgba(5,5,16,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:10}
-.header-left{display:flex;align-items:center;gap:16px}
-.logo{width:42px;height:42px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
-.header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.header-right{display:flex;align-items:center;gap:16px}
-.user-chip{display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:12px;font-size:13px;color:#a78bfa}
-.user-chip svg{width:16px;height:16px;fill:#a78bfa}
-.logout-btn{padding:8px 18px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;color:#f87171;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s}
-.logout-btn:hover{background:rgba(239,68,68,0.25);border-color:#ef4444}
+.header{padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(124,58,237,0.1);background:rgba(5,5,16,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:10}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
+.header h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;align-items:center;gap:12px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:10px;font-size:12px;color:#a78bfa}
+.user-chip svg{width:14px;height:14px;fill:#a78bfa}
+.logout-btn{padding:6px 14px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;color:#f87171;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.2s}
+.logout-btn:hover{background:rgba(239,68,68,0.25)}
 
-.stats-bar{display:flex;gap:12px;padding:24px 32px;flex-wrap:wrap}
-.stat-card{flex:1;min-width:140px;padding:20px;border-radius:16px;text-align:center;transition:transform 0.2s}
+.tabs{display:flex;gap:4px;padding:12px 32px;background:rgba(5,5,16,0.5);border-bottom:1px solid rgba(124,58,237,0.08)}
+.tab{padding:10px 24px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:rgba(255,255,255,0.4);transition:all 0.2s;border:1px solid transparent;font-family:'Inter',sans-serif;background:none}
+.tab:hover{color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.03)}
+.tab.active{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);color:#a78bfa}
+
+.stats-bar{display:flex;gap:12px;padding:20px 32px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:100px;padding:16px;border-radius:14px;text-align:center;transition:transform 0.2s}
 .stat-card:hover{transform:translateY(-2px)}
 .stat-card.total{background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.2)}
 .stat-card.used{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2)}
 .stat-card.free{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)}
-.stat-card .num{font-size:32px;font-weight:800;margin-bottom:4px}
+.stat-card.locked{background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.2)}
+.stat-card.all{background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.2)}
+.stat-card .num{font-size:28px;font-weight:800;margin-bottom:2px}
 .stat-card.total .num{color:#a78bfa}
 .stat-card.used .num{color:#4ade80}
 .stat-card.free .num{color:#818cf8}
-.stat-card .label{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.6}
+.stat-card.locked .num{color:#facc15}
+.stat-card.all .num{color:#f472b6}
+.stat-card .label{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5}
 
 .main{max-width:1200px;margin:0 auto;padding:0 32px 40px}
-.section{padding:28px;margin-bottom:24px}
-.section-title{font-size:16px;font-weight:600;color:#c4b5fd;margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#7c3aed,#a855f7);border-radius:4px}
+.section{padding:24px;margin-bottom:20px}
+.section-title{font-size:15px;font-weight:600;color:#c4b5fd;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.section-title::before{content:'';width:4px;height:18px;background:linear-gradient(180deg,#7c3aed,#a855f7);border-radius:4px}
 
-.gen-row{display:flex;gap:10px;margin-bottom:16px}
-.gen-row input{flex:1;padding:14px 18px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:15px;font-family:'Inter',sans-serif;transition:border-color 0.2s;outline:none}
-.gen-row input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
-.gen-row input::placeholder{color:rgba(255,255,255,0.3)}
-.btn{padding:14px 24px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.gen-top{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+.gen-top input{flex:1;padding:12px 16px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+.gen-top input:focus{border-color:#7c3aed}
+.gen-top input::placeholder{color:rgba(255,255,255,0.3)}
+.gen-top input.hwid-input{max-width:300px;display:none}
+
+.mode-toggle{display:flex;gap:4px;padding:4px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.15);border-radius:12px}
+.mode-btn{padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;font-family:'Inter',sans-serif;background:none;color:rgba(255,255,255,0.4)}
+.mode-btn.active{color:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+.mode-btn.hwid.active{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.mode-btn.allmode.active{background:linear-gradient(135deg,#ec4899,#db2777)}
+
+.btn{padding:12px 22px;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
 .btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 15px rgba(124,58,237,0.3)}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.4)}
 .btn-danger{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
 .btn-danger:hover{background:rgba(239,68,68,0.25)}
 
-.new-keys-box{display:none;padding:18px;border-radius:12px;margin-top:16px;max-height:280px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;color:#4ade80;direction:ltr;text-align:left;white-space:pre-line;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);line-height:1.8}
+.new-keys-box{display:none;padding:16px;border-radius:12px;margin-top:14px;max-height:250px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;color:#4ade80;direction:ltr;text-align:left;white-space:pre-line;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);line-height:1.8}
 .new-keys-box::-webkit-scrollbar{width:6px}
-.new-keys-box::-webkit-scrollbar-track{background:transparent}
 .new-keys-box::-webkit-scrollbar-thumb{background:rgba(34,197,94,0.3);border-radius:3px}
 
-.filter-row{display:flex;gap:6px;margin-bottom:16px}
-.filter-btn{padding:8px 18px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;font-family:'Inter',sans-serif}
+.filter-row{display:flex;gap:6px;margin-bottom:14px}
+.filter-btn{padding:7px 16px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);border-radius:10px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.2s;font-family:'Inter',sans-serif}
 .filter-btn.active{background:rgba(124,58,237,0.2);border-color:rgba(124,58,237,0.4);color:#a78bfa}
-.filter-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
 
 .keys-list{max-height:450px;overflow-y:auto}
 .keys-list::-webkit-scrollbar{width:6px}
-.keys-list::-webkit-scrollbar-track{background:transparent}
 .keys-list::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:3px}
-
-.key-item{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.05);gap:12px;flex-wrap:wrap;transition:background 0.15s}
+.key-item{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);gap:10px;flex-wrap:wrap;transition:background 0.15s}
 .key-item:last-child{border-bottom:none}
 .key-item:hover{background:rgba(124,58,237,0.05)}
-.key-item .code{color:#4ade80;font-family:'Courier New',monospace;font-size:14px;font-weight:600;direction:ltr;text-align:left;min-width:220px;flex:1}
-.key-item .hwid{color:rgba(250,204,21,0.8);font-size:12px;min-width:150px;flex:1;font-family:'Courier New',monospace;direction:ltr}
-.key-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px}
+.key-item .code{color:#4ade80;font-family:'Courier New',monospace;font-size:13px;font-weight:600;direction:ltr;text-align:left;min-width:200px;flex:1}
+.key-item .hwid-col{color:rgba(250,204,21,0.8);font-size:11px;min-width:100px;font-family:'Courier New',monospace;direction:ltr}
+.key-badge{padding:3px 10px;border-radius:16px;font-size:10px;font-weight:600;letter-spacing:0.5px}
 .key-badge.used{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
 .key-badge.free{background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.2)}
-.key-actions{display:flex;gap:6px}
-.key-actions button{padding:5px 12px;border:none;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.15s;font-family:'Inter',sans-serif}
+.key-badge.locked-badge{background:rgba(250,204,21,0.15);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
+.key-badge.all-badge{background:rgba(236,72,153,0.15);color:#f472b6;border:1px solid rgba(236,72,153,0.2)}
+.key-actions{display:flex;gap:4px}
+.key-actions button{padding:4px 10px;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:600;transition:all 0.15s;font-family:'Inter',sans-serif}
 .key-actions .revoke{background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
-.key-actions .revoke:hover{background:rgba(250,204,21,0.2)}
 .key-actions .delete{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
-.key-actions .delete:hover{background:rgba(239,68,68,0.2)}
 
-.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-size:14px;font-weight:500;z-index:999;animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px)}
-.toast.ok{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3);box-shadow:0 8px 30px rgba(34,197,94,0.15)}
-.toast.err{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);box-shadow:0 8px 30px rgba(239,68,68,0.15)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:13px;font-weight:500;z-index:999;animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px)}
+.toast.ok{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+.toast.err{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px) scale(0.95)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
-.hidden{display:none}
 
 .login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .login-box{max-width:440px;width:100%;padding:48px 40px;text-align:center}
@@ -96,21 +107,19 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .pass-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
 .pass-input::placeholder{color:rgba(255,255,255,0.3)}
 .pass-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 15px rgba(124,58,237,0.3);transition:all 0.2s;margin-bottom:24px}
-.pass-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.4)}
+.pass-btn:hover{transform:translateY(-1px)}
 .pass-divider{display:flex;align-items:center;gap:16px;margin-bottom:24px}
 .pass-divider::before,.pass-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
 .pass-divider span{color:rgba(255,255,255,0.25);font-size:12px;white-space:nowrap}
 .google-signin-container{display:flex;justify-content:center}
-.google-signin-container iframe{border-radius:12px !important}
-.login-footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);font-size:12px}
+.login-footer{margin-top:32px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);font-size:11px}
 
 @media(max-width:768px){
-  .header{padding:16px 20px}
-  .stats-bar{padding:16px 20px}
-  .main{padding:0 20px 30px}
-  .stat-card .num{font-size:24px}
+  .header{padding:12px 16px}
+  .stats-bar{padding:12px 16px}
+  .main{padding:0 16px 30px}
+  .stat-card .num{font-size:22px}
   .key-item{flex-direction:column;align-items:flex-start}
-  .key-item .code,.key-item .hwid{min-width:auto}
 }
 </style>
 </head>
@@ -148,39 +157,50 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
     </div>
   </div>
 
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('generate',this)">Generate Keys</button>
+    <button class="tab" onclick="switchTab('keys',this)">All Keys</button>
+  </div>
+
   <div class="stats-bar">
-    <div class="stat-card total glass">
-      <div class="num" id="statTotal">0</div>
-      <div class="label">Total Keys</div>
-    </div>
-    <div class="stat-card used glass">
-      <div class="num" id="statUsed">0</div>
-      <div class="label">Used</div>
-    </div>
-    <div class="stat-card free glass">
-      <div class="num" id="statFree">0</div>
-      <div class="label">Available</div>
-    </div>
+    <div class="stat-card total glass"><div class="num" id="statTotal">0</div><div class="label">Total</div></div>
+    <div class="stat-card used glass"><div class="num" id="statUsed">0</div><div class="label">Used</div></div>
+    <div class="stat-card free glass"><div class="num" id="statFree">0</div><div class="label">Available</div></div>
+    <div class="stat-card locked glass"><div class="num" id="statLocked">0</div><div class="label">HWID Locked</div></div>
+    <div class="stat-card all glass"><div class="num" id="statUnlocked">0</div><div class="label">All Devices</div></div>
   </div>
 
   <div class="main">
-    <div class="section glass">
-      <div class="section-title">Generate New Keys</div>
-      <div class="gen-row">
-        <input type="number" id="keyCount" placeholder="How many keys?" value="10" min="1" max="500">
-        <button class="btn btn-primary" onclick="generateKeys()">Generate</button>
-        <button class="btn btn-danger" onclick="deleteAllUnused()">Delete All Unused</button>
+    <div id="tabGenerate">
+      <div class="section glass">
+        <div class="section-title">Generate New Keys</div>
+        <div class="mode-toggle">
+          <button class="mode-btn hwid active" onclick="setMode('hwid',this)">HWID (One Device)</button>
+          <button class="mode-btn allmode" onclick="setMode('all',this)">ALL (All Devices)</button>
+        </div>
+        <div style="height:12px"></div>
+        <div class="gen-top">
+          <input type="text" class="hwid-input" id="hwidInput" placeholder="Enter HWID">
+          <input type="number" id="keyCount" placeholder="Number of keys" value="10" min="1" max="500">
+          <button class="btn btn-primary" onclick="generateKeys()">Generate</button>
+          <button class="btn btn-danger" onclick="deleteAllUnused()">Delete Unused</button>
+        </div>
+        <div class="new-keys-box" id="newKeysBox"></div>
       </div>
-      <div class="new-keys-box" id="newKeysBox"></div>
     </div>
-    <div class="section glass">
-      <div class="section-title">All Keys</div>
-      <div class="filter-row">
-        <button class="filter-btn active" onclick="filterKeys('all',this)">All</button>
-        <button class="filter-btn" onclick="filterKeys('used',this)">Used</button>
-        <button class="filter-btn" onclick="filterKeys('free',this)">Available</button>
+
+    <div id="tabKeys">
+      <div class="section glass">
+        <div class="section-title">All Keys</div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterKeys('all',this)">All</button>
+          <button class="filter-btn" onclick="filterKeys('used',this)">Used</button>
+          <button class="filter-btn" onclick="filterKeys('free',this)">Available</button>
+          <button class="filter-btn" onclick="filterKeys('hwid',this)">HWID</button>
+          <button class="filter-btn" onclick="filterKeys('alldev',this)">All Devices</button>
+        </div>
+        <div class="keys-list" id="keysList"></div>
       </div>
-      <div class="keys-list" id="keysList"></div>
     </div>
   </div>
 </div>
@@ -190,6 +210,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 let SESSION_TOKEN = localStorage.getItem('bx_session') || '';
 let allKeys = [];
 let currentFilter = 'all';
+let currentMode = 'hwid';
 const SITE_PASS = '@lioux@breach202600';
 
 function checkPassword() {
@@ -204,6 +225,21 @@ function checkPassword() {
     document.getElementById('passInput').style.borderColor = '#ef4444';
     setTimeout(() => document.getElementById('passInput').style.borderColor = '', 1500);
   }
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tabGenerate').classList.toggle('hidden', tab !== 'generate');
+  document.getElementById('tabKeys').classList.toggle('hidden', tab !== 'keys');
+  if (tab === 'keys') loadKeys();
+}
+
+function setMode(mode, el) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('hwidInput').style.display = mode === 'hwid' ? 'block' : 'none';
 }
 
 function toast(msg, ok) {
@@ -233,7 +269,7 @@ async function handleCredentialResponse(response) {
     document.getElementById('loginBox').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     document.getElementById('userEmail').textContent = r.email;
-    loadKeys();
+    updateStats();
 }
 
 window.onload = function() {
@@ -258,7 +294,7 @@ async function checkSession() {
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
         document.getElementById('userEmail').textContent = r.email;
-        loadKeys();
+        updateStats();
     } else {
         SESSION_TOKEN = '';
         localStorage.removeItem('bx_session');
@@ -273,21 +309,22 @@ async function doLogout() {
     document.getElementById('loginBox').classList.remove('hidden');
 }
 
-async function loadKeys() {
-  const r = await api('/api/keys', { _get: true });
-  if (!r.success) { toast(r.message, false); return; }
-  allKeys = r.keys;
-  updateStats();
-  renderKeys();
-}
-
 async function updateStats() {
   const r = await api('/api/stats', { _get: true });
   if (r.success) {
     document.getElementById('statTotal').textContent = r.total;
     document.getElementById('statUsed').textContent = r.used;
     document.getElementById('statFree').textContent = r.unused;
+    document.getElementById('statLocked').textContent = r.locked;
+    document.getElementById('statUnlocked').textContent = r.unlocked;
   }
+}
+
+async function loadKeys() {
+  const r = await api('/api/keys', { _get: true });
+  if (!r.success) { toast(r.message, false); return; }
+  allKeys = r.keys;
+  renderKeys();
 }
 
 function renderKeys() {
@@ -295,12 +332,15 @@ function renderKeys() {
   let filtered = allKeys;
   if (currentFilter === 'used') filtered = allKeys.filter(k => k.is_used);
   if (currentFilter === 'free') filtered = allKeys.filter(k => !k.is_used);
+  if (currentFilter === 'hwid') filtered = allKeys.filter(k => k.locked);
+  if (currentFilter === 'alldev') filtered = allKeys.filter(k => !k.locked);
   if (!filtered.length) { list.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.2);font-size:14px">No keys found</div>'; return; }
   list.innerHTML = filtered.map(k => `
     <div class="key-item">
       <span class="code">${k.key_code}</span>
-      <span class="hwid">${k.is_used ? k.hwid : '—'}</span>
-      <span class="key-badge ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'AVAILABLE'}</span>
+      <span class="hwid-col">${k.locked ? (k.hwid || 'Not locked yet') : 'All Devices'}</span>
+      <span class="key-badge ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'FREE'}</span>
+      <span class="key-badge ${k.locked ? 'locked-badge' : 'all-badge'}">${k.locked ? 'HWID' : 'ALL'}</span>
       <div class="key-actions">
         ${k.is_used ? `<button class="revoke" onclick="revokeKey('${k.key_code}')">Revoke</button>` : ''}
         <button class="delete" onclick="deleteKey('${k.key_code}')">Delete</button>
@@ -318,13 +358,18 @@ function filterKeys(f, el) {
 
 async function generateKeys() {
   const count = document.getElementById('keyCount').value;
-  const r = await api('/api/generate', { count: parseInt(count) });
+  const hwid = currentMode === 'hwid' ? document.getElementById('hwidInput').value : '';
+  if (currentMode === 'hwid' && !hwid.trim()) {
+    toast('Enter HWID for locked keys', false);
+    return;
+  }
+  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, hwid: hwid.trim() });
   if (!r.success) { toast(r.message, false); return; }
   const box = document.getElementById('newKeysBox');
   box.style.display = 'block';
   box.textContent = r.keys.join('\n');
-  toast('Generated ' + r.keys.length + ' keys!', true);
-  loadKeys();
+  toast('Generated ' + r.keys.length + ' keys (' + (r.mode === 'hwid' ? 'HWID Locked' : 'All Devices') + ')', true);
+  updateStats();
 }
 
 async function revokeKey(code) {
