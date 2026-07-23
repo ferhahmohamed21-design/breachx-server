@@ -34,6 +34,10 @@ function createEmbed(title, description, color) {
 async function deployCommands(clientId, token, guildId) {
     const commands = [
         new SlashCommandBuilder()
+            .setName('starkey')
+            .setDescription('Get a free 24h Breach X key'),
+
+        new SlashCommandBuilder()
             .setName('generate')
             .setDescription('Generate new Breach X keys')
             .addIntegerOption(opt => opt.setName('count').setDescription('Number of keys (1-100)').setRequired(true).setMinValue(1).setMaxValue(100))
@@ -109,7 +113,9 @@ function startBot() {
         const { commandName } = interaction;
 
         try {
-            if (commandName === 'generate') {
+            if (commandName === 'starkey') {
+                await handleStarKey(interaction);
+            } else if (commandName === 'generate') {
                 await handleGenerate(interaction);
             } else if (commandName === 'keycheck') {
                 await handleKeyCheck(interaction);
@@ -138,6 +144,22 @@ function startBot() {
     });
 
     return client;
+}
+
+async function handleStarKey(interaction) {
+    const code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-';
+    const expireAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+    await turso.execute({
+        sql: 'INSERT INTO keys (key_code, hwid, locked, expire_at, group_name) VALUES (?, ?, ?, ?, ?)',
+        args: [code, '', 0, expireAt, '']
+    });
+
+    const embed = createEmbed('Your Key', 'This key is valid for **24 hours**', GOLD);
+    embed.addFields({ name: 'Key', value: '`' + code + '`', inline: false });
+    embed.addFields({ name: 'Expires', value: '24 hours', inline: true });
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
 }
 
 async function handleGenerate(interaction) {
