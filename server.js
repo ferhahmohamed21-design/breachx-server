@@ -40,9 +40,11 @@ async function initDB() {
         hwid TEXT DEFAULT '',
         is_used INTEGER DEFAULT 0,
         locked INTEGER DEFAULT 0,
+        expire_at TEXT DEFAULT '',
         created_at TEXT DEFAULT (datetime('now')),
         used_at TEXT DEFAULT ''
     )`);
+    try { db.run(`ALTER TABLE keys ADD COLUMN expire_at TEXT DEFAULT ''`); } catch(e) {}
     saveDB();
 }
 
@@ -151,6 +153,12 @@ app.post('/api/validate', (req, res) => {
     const row = dbGet('SELECT * FROM keys WHERE key_code = ?', [key]);
     if (!row) return res.json({ valid: false, message: 'Key not found' });
 
+    if (row.expire_at && row.expire_at !== '') {
+        const expireTime = new Date(row.expire_at).getTime();
+        if (Date.now() > expireTime)
+            return res.json({ valid: false, message: 'Key expired' });
+    }
+
     if (row.locked === 1) {
         if (row.is_used && row.hwid !== hwid)
             return res.json({ valid: false, message: 'Key used on another device' });
@@ -166,16 +174,24 @@ app.post('/api/generate', (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { count, mode } = req.body;
+    const { count, mode, expireValue, expireUnit } = req.body;
     const n = Math.min(Math.max(parseInt(count) || 1, 1), 500);
     const locked = mode === 'hwid' ? 1 : 0;
     const keys = [];
+
+    let expireAt = '';
+    if (expireValue && expireUnit) {
+        const ms = parseInt(expireValue) * ({
+            seconds: 1000, minutes: 60000, hours: 3600000, days: 86400000
+        }[expireUnit] || 0);
+        if (ms > 0) expireAt = new Date(Date.now() + ms).toISOString();
+    }
 
     for (let i = 0; i < n; i++) {
         let code;
         do { code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-'; }
         while (dbGet('SELECT 1 FROM keys WHERE key_code = ?', [code]));
-        dbRun('INSERT INTO keys (key_code, hwid, locked) VALUES (?, ?, ?)', [code, '', locked]);
+        dbRun('INSERT INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)', [code, '', locked, expireAt]);
         keys.push(code);
     }
 
@@ -186,15 +202,23 @@ app.post('/api/generate-custom', (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { key, mode } = req.body;
+    const { key, mode, expireValue, expireUnit } = req.body;
     if (!key || !key.trim()) return res.json({ success: false, message: 'No key provided' });
 
     const code = key.trim().toUpperCase();
     if (dbGet('SELECT 1 FROM keys WHERE key_code = ?', [code]))
         return res.json({ success: false, message: 'Key already exists' });
 
+    let expireAt = '';
+    if (expireValue && expireUnit) {
+        const ms = parseInt(expireValue) * ({
+            seconds: 1000, minutes: 60000, hours: 3600000, days: 86400000
+        }[expireUnit] || 0);
+        if (ms > 0) expireAt = new Date(Date.now() + ms).toISOString();
+    }
+
     const locked = mode === 'hwid' ? 1 : 0;
-    dbRun('INSERT INTO keys (key_code, hwid, locked) VALUES (?, ?, ?)', [code, '', locked]);
+    dbRun('INSERT INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)', [code, '', locked, expireAt]);
     return res.json({ success: true, keys: [code], mode: locked ? 'hwid' : 'all' });
 });
 

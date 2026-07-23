@@ -86,6 +86,8 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .key-badge.free{background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.2)}
 .key-badge.locked-badge{background:rgba(250,204,21,0.15);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
 .key-badge.all-badge{background:rgba(236,72,153,0.15);color:#f472b6;border:1px solid rgba(236,72,153,0.2)}
+.key-badge.expire-badge{background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.2)}
+.key-badge.expired-badge{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
 .key-actions{display:flex;gap:4px}
 .key-actions button{padding:4px 10px;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:600;transition:all 0.15s;font-family:'Inter',sans-serif}
 .key-actions .revoke{background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.2)}
@@ -181,6 +183,13 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
         <div class="gen-top">
           <input type="number" id="keyCount" placeholder="Number of keys" value="10" min="1" max="500">
           <input type="text" id="customKeyInput" placeholder="BreachX-Safe-OB54-XXXX-" style="display:none;flex:2;min-width:300px;text-transform:uppercase" maxlength="30">
+          <input type="number" id="expireValue" placeholder="Expire" value="" min="1" style="max-width:90px">
+          <select id="expireUnit" style="padding:12px 10px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:12px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;outline:none;cursor:pointer">
+            <option value="seconds">Seconds</option>
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days" selected>Days</option>
+          </select>
           <button class="btn btn-primary" onclick="generateKeys()">Generate</button>
           <button class="btn btn-danger" onclick="deleteAllUnused()">Delete Unused</button>
         </div>
@@ -197,6 +206,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
           <button class="filter-btn" onclick="filterKeys('free',this)">Available</button>
           <button class="filter-btn" onclick="filterKeys('hwid',this)">HWID</button>
           <button class="filter-btn" onclick="filterKeys('alldev',this)">All Devices</button>
+          <button class="filter-btn" onclick="filterKeys('expired',this)">Expired</button>
         </div>
         <div class="keys-list" id="keysList"></div>
       </div>
@@ -352,19 +362,37 @@ function renderKeys() {
   if (currentFilter === 'free') filtered = allKeys.filter(k => !k.is_used);
   if (currentFilter === 'hwid') filtered = allKeys.filter(k => k.locked);
   if (currentFilter === 'alldev') filtered = allKeys.filter(k => !k.locked);
+  if (currentFilter === 'expired') filtered = allKeys.filter(k => k.expire_at && new Date(k.expire_at).getTime() < Date.now());
   if (!filtered.length) { list.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.2);font-size:14px">No keys found</div>'; return; }
-  list.innerHTML = filtered.map(k => `
-    <div class="key-item">
+  list.innerHTML = filtered.map(k => {
+    const isExpired = k.expire_at && new Date(k.expire_at).getTime() < Date.now();
+    let expireText = 'No limit';
+    let expireClass = 'free';
+    if (k.expire_at) {
+      if (isExpired) { expireText = 'EXPIRED'; expireClass = 'expired-badge'; }
+      else {
+        const diff = new Date(k.expire_at).getTime() - Date.now();
+        const s = Math.floor(diff/1000), m = Math.floor(s/60), h = Math.floor(m/60), d = Math.floor(h/24);
+        if (d > 0) expireText = d + 'd ' + (h%24) + 'h';
+        else if (h > 0) expireText = h + 'h ' + (m%60) + 'm';
+        else if (m > 0) expireText = m + 'm ' + (s%60) + 's';
+        else expireText = s + 's';
+        expireClass = 'expire-badge';
+      }
+    }
+    return `
+    <div class="key-item" ${isExpired ? 'style="opacity:0.4"' : ''}>
       <span class="code">${k.key_code}</span>
-      <span class="hwid-col">${k.locked ? (k.hwid || 'Waiting for first use...') : 'All Devices'}</span>
+      <span class="hwid-col">${k.locked ? (k.hwid || 'Waiting...') : 'All Devices'}</span>
       <span class="key-badge ${k.is_used ? 'used' : 'free'}">${k.is_used ? 'USED' : 'FREE'}</span>
       <span class="key-badge ${k.locked ? 'locked-badge' : 'all-badge'}">${k.locked ? 'HWID' : 'ALL'}</span>
+      <span class="key-badge ${expireClass}">${expireText}</span>
       <div class="key-actions">
         ${k.is_used ? `<button class="revoke" onclick="revokeKey('${k.key_code}')">Revoke</button>` : ''}
         <button class="delete" onclick="deleteKey('${k.key_code}')">Delete</button>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function filterKeys(f, el) {
@@ -374,11 +402,15 @@ function filterKeys(f, el) {
   renderKeys();
 }
 
+setInterval(() => { if (allKeys.length && !document.getElementById('tabKeys').classList.contains('hidden')) renderKeys(); }, 1000);
+
 async function generateKeys() {
+  const expireValue = document.getElementById('expireValue').value;
+  const expireUnit = document.getElementById('expireUnit').value;
   if (currentMode === 'custom') {
     const customKey = document.getElementById('customKeyInput').value.trim().toUpperCase();
     if (!customKey) { toast('Enter a key', false); return; }
-    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid' });
+    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid', expireValue, expireUnit });
     if (!r.success) { toast(r.message, false); return; }
     const box = document.getElementById('newKeysBox');
     box.style.display = 'block';
@@ -389,7 +421,7 @@ async function generateKeys() {
     return;
   }
   const count = document.getElementById('keyCount').value;
-  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode });
+  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, expireValue, expireUnit });
   if (!r.success) { toast(r.message, false); return; }
   const box = document.getElementById('newKeysBox');
   box.style.display = 'block';
