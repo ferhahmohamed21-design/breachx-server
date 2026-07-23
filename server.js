@@ -24,9 +24,11 @@ async function initDB() {
         is_used INTEGER DEFAULT 0,
         locked INTEGER DEFAULT 0,
         expire_at TEXT DEFAULT '',
+        group_name TEXT DEFAULT '',
         created_at TEXT DEFAULT (datetime('now')),
         used_at TEXT DEFAULT ''
     )`);
+    try { await turso.execute(`ALTER TABLE keys ADD COLUMN group_name TEXT DEFAULT ''`); } catch(e) {}
 }
 
 function generateKeyCode() {
@@ -121,10 +123,11 @@ app.post('/api/generate', async (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { count, mode, expireMs } = req.body;
+    const { count, mode, expireMs, group } = req.body;
     const n = Math.min(Math.max(parseInt(count) || 1, 1), 500);
     const locked = mode === 'hwid' ? 1 : 0;
     const keys = [];
+    const groupName = (group || '').trim();
 
     let expireAt = '';
     if (expireMs && parseInt(expireMs) > 0) {
@@ -137,8 +140,8 @@ app.post('/api/generate', async (req, res) => {
     }
 
     const stmts = allCodes.map(code => ({
-        sql: 'INSERT OR IGNORE INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)',
-        args: [code, '', locked, expireAt]
+        sql: 'INSERT OR IGNORE INTO keys (key_code, hwid, locked, expire_at, group_name) VALUES (?, ?, ?, ?, ?)',
+        args: [code, '', locked, expireAt, groupName]
     }));
     await turso.batch(stmts);
 
@@ -155,7 +158,7 @@ app.post('/api/generate-custom', async (req, res) => {
     const session = requireSession(req);
     if (!session) return res.json({ success: false, message: 'Not logged in' });
 
-    const { key, mode, expireMs } = req.body;
+    const { key, mode, expireMs, group } = req.body;
     if (!key || !key.trim()) return res.json({ success: false, message: 'No key provided' });
 
     const code = key.trim().toUpperCase();
@@ -168,7 +171,8 @@ app.post('/api/generate-custom', async (req, res) => {
     }
 
     const locked = mode === 'hwid' ? 1 : 0;
-    await turso.execute({ sql: 'INSERT INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)', args: [code, '', locked, expireAt] });
+    const groupName = (group || '').trim();
+    await turso.execute({ sql: 'INSERT INTO keys (key_code, hwid, locked, expire_at, group_name) VALUES (?, ?, ?, ?, ?)', args: [code, '', locked, expireAt, groupName] });
     return res.json({ success: true, keys: [code], mode: locked ? 'hwid' : 'all' });
 });
 
@@ -194,6 +198,29 @@ app.post('/api/delete-all-unused', async (req, res) => {
     const before = await turso.execute('SELECT COUNT(*) as c FROM keys WHERE is_used = 0');
     await turso.execute('DELETE FROM keys WHERE is_used = 0');
     return res.json({ success: true, message: `Deleted ${before.rows[0]?.c || 0} unused keys` });
+});
+
+app.post('/api/delete-group', async (req, res) => {
+    const session = requireSession(req);
+    if (!session) return res.json({ success: false, message: 'Not logged in' });
+    const { group_name } = req.body;
+    if (!group_name) return res.json({ success: false, message: 'No group' });
+    const before = await turso.execute({ sql: 'SELECT COUNT(*) as c FROM keys WHERE group_name = ?', args: [group_name] });
+    await turso.execute({ sql: 'DELETE FROM keys WHERE group_name = ?', args: [group_name] });
+    return res.json({ success: true, message: `Deleted ${before.rows[0]?.c || 0} keys from ${group_name}` });
+});
+
+app.post('/api/delete-selected', async (req, res) => {
+    const session = requireSession(req);
+    if (!session) return res.json({ success: false, message: 'Not logged in' });
+    const { key_codes } = req.body;
+    if (!key_codes || !key_codes.length) return res.json({ success: false, message: 'No keys selected' });
+    const stmts = key_codes.map(code => ({
+        sql: 'DELETE FROM keys WHERE key_code = ?',
+        args: [code]
+    }));
+    await turso.batch(stmts);
+    return res.json({ success: true, message: `Deleted ${key_codes.length} keys` });
 });
 
 app.get('/api/keys', async (req, res) => {

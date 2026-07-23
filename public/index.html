@@ -109,6 +109,29 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .btn-ghost{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)}
 .btn-ghost:hover{background:rgba(255,255,255,0.1)}
 
+.group-bar{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;background:rgba(30,27,75,0.3);border-radius:10px;border:1px solid rgba(124,58,237,0.1)}
+.group-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.group-chip{padding:6px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;font-family:'Inter',sans-serif;color:#fff}
+.group-chip.premium{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 2px 8px rgba(245,158,11,0.3)}
+.group-chip.premium:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,158,11,0.4)}
+.group-chip.free-chip{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 2px 8px rgba(34,197,94,0.3)}
+.group-chip.free-chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,0.4)}
+
+.group-modal-actions{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.select-all-label{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer}
+.select-all-label input{accent-color:#7c3aed}
+.group-keys-list{max-height:300px;overflow-y:auto;border:1px solid rgba(124,58,237,0.1);border-radius:10px}
+.group-keys-list::-webkit-scrollbar{width:5px}
+.group-keys-list::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:3px}
+.group-key-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);gap:10px;font-size:12px;transition:background 0.1s}
+.group-key-item:last-child{border-bottom:none}
+.group-key-item:hover{background:rgba(124,58,237,0.05)}
+.group-key-item input[type="checkbox"]{accent-color:#7c3aed;width:16px;height:16px}
+.group-key-item .gk-code{color:#4ade80;font-family:'Courier New',monospace;font-weight:600;direction:ltr;flex:1}
+.group-key-item .gk-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.gk-used{background:rgba(34,197,94,0.15);color:#4ade80}
+.gk-free{background:rgba(99,102,241,0.15);color:#818cf8}
+
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 
@@ -206,6 +229,12 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
           <button class="btn btn-primary" onclick="openExpireModal()">Generate</button>
           <button class="btn btn-danger" onclick="deleteAllUnused()">Delete Unused</button>
         </div>
+        <div class="group-bar">
+          <span class="group-label">Group:</span>
+          <input type="text" id="groupInput" placeholder="e.g. Premium, Free..." style="padding:8px 12px;background:rgba(30,27,75,0.5);border:1px solid rgba(124,58,237,0.2);border-radius:8px;color:#fff;font-size:12px;font-family:'Inter',sans-serif;outline:none;width:160px">
+          <button class="group-chip premium" onclick="openGroupModal('Premium')">Premium</button>
+          <button class="group-chip free-chip" onclick="openGroupModal('Free')">Free</button>
+        </div>
         <div class="new-keys-box" id="newKeysBox"></div>
       </div>
     </div>
@@ -259,12 +288,29 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="groupModal" onclick="if(event.target===this)closeGroupModal()">
+  <div class="modal glass" style="max-width:550px">
+    <h3 id="groupModalTitle">Premium Keys</h3>
+    <p id="groupModalCount">0 keys</p>
+    <div class="group-modal-actions">
+      <label class="select-all-label"><input type="checkbox" id="selectAllGroup" onchange="toggleSelectAll()"> Select All</label>
+      <button class="btn btn-danger" style="padding:6px 16px;font-size:11px" onclick="deleteSelectedGroup()">Delete Selected</button>
+      <button class="btn btn-danger" style="padding:6px 16px;font-size:11px" onclick="deleteAllInGroup()">Delete All</button>
+    </div>
+    <div class="group-keys-list" id="groupKeysList"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeGroupModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 let SESSION_TOKEN = localStorage.getItem('bx_session') || '';
 let allKeys = [];
 let currentFilter = 'all';
 let currentMode = 'hwid';
+let currentGroupName = '';
 const SITE_PASS = '@lioux@breach202600';
 
 function checkPassword() {
@@ -353,14 +399,16 @@ function generateWithExpiry(noLimit) {
 }
 
 async function doGenerate(d, h, m, s) {
-  let expireValue = 0, expireUnit = '';
+  let expireValue = 0;
   const totalMs = ((d * 86400) + (h * 3600) + (m * 60) + s) * 1000;
-  if (totalMs > 0) { expireValue = totalMs; expireUnit = 'ms'; }
+  if (totalMs > 0) expireValue = totalMs;
+
+  const group = document.getElementById('groupInput').value.trim();
 
   if (currentMode === 'custom') {
     const customKey = document.getElementById('customKeyInput').value.trim().toUpperCase();
     if (!customKey) { toast('Enter a key', false); return; }
-    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid', expireMs: expireValue });
+    const r = await api('/api/generate-custom', { key: customKey, mode: 'hwid', expireMs: expireValue, group });
     if (!r.success) { toast(r.message, false); return; }
     const box = document.getElementById('newKeysBox');
     box.style.display = 'block';
@@ -371,7 +419,7 @@ async function doGenerate(d, h, m, s) {
     return;
   }
   const count = document.getElementById('keyCount').value;
-  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, expireMs: expireValue });
+  const r = await api('/api/generate', { count: parseInt(count), mode: currentMode, expireMs: expireValue, group });
   if (!r.success) { toast(r.message, false); return; }
   const box = document.getElementById('newKeysBox');
   box.style.display = 'block';
@@ -523,6 +571,60 @@ async function deleteAllUnused() {
   const r = await api('/api/delete-all-unused', {});
   toast(r.message, r.success);
   loadKeys();
+}
+
+function openGroupModal(groupName) {
+  currentGroupName = groupName;
+  document.getElementById('groupModalTitle').textContent = groupName + ' Keys';
+  document.getElementById('selectAllGroup').checked = false;
+  renderGroupKeys();
+  document.getElementById('groupModal').classList.remove('hidden');
+}
+
+function closeGroupModal() {
+  document.getElementById('groupModal').classList.add('hidden');
+}
+
+function renderGroupKeys() {
+  const keys = allKeys.filter(k => k.group_name === currentGroupName);
+  document.getElementById('groupModalCount').textContent = keys.length + ' keys';
+  const list = document.getElementById('groupKeysList');
+  if (!keys.length) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:rgba(255,255,255,0.2);font-size:13px">No keys in this group</div>';
+    return;
+  }
+  list.innerHTML = keys.map(k => `
+    <div class="group-key-item">
+      <input type="checkbox" class="group-cb" value="${k.key_code}">
+      <span class="gk-code">${k.key_code}</span>
+      <span class="gk-status ${k.is_used ? 'gk-used' : 'gk-free'}">${k.is_used ? 'USED' : 'FREE'}</span>
+    </div>
+  `).join('');
+}
+
+function toggleSelectAll() {
+  const checked = document.getElementById('selectAllGroup').checked;
+  document.querySelectorAll('.group-cb').forEach(cb => cb.checked = checked);
+}
+
+async function deleteSelectedGroup() {
+  const selected = [...document.querySelectorAll('.group-cb:checked')].map(cb => cb.value);
+  if (!selected.length) { toast('Select keys first', false); return; }
+  if (!confirm(`Delete ${selected.length} selected keys?`)) return;
+  const r = await api('/api/delete-selected', { key_codes: selected });
+  toast(r.message, r.success);
+  loadKeys();
+  renderGroupKeys();
+}
+
+async function deleteAllInGroup() {
+  const keys = allKeys.filter(k => k.group_name === currentGroupName);
+  if (!keys.length) { toast('No keys in this group', false); return; }
+  if (!confirm(`Delete ALL ${keys.length} keys in ${currentGroupName}?`)) return;
+  const r = await api('/api/delete-group', { group_name: currentGroupName });
+  toast(r.message, r.success);
+  loadKeys();
+  renderGroupKeys();
 }
 </script>
 </body>
