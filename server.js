@@ -131,17 +131,22 @@ app.post('/api/generate', async (req, res) => {
         expireAt = new Date(Date.now() + parseInt(expireMs)).toISOString();
     }
 
+    const allCodes = [];
     for (let i = 0; i < n; i++) {
-        let code;
-        let unique = false;
-        while (!unique) {
-            code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-';
-            const exists = await turso.execute({ sql: 'SELECT 1 FROM keys WHERE key_code = ?', args: [code] });
-            if (exists.rows.length === 0) unique = true;
-        }
-        await turso.execute({ sql: 'INSERT INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)', args: [code, '', locked, expireAt] });
-        keys.push(code);
+        allCodes.push('BreachX-Safe-OB54-' + generateKeyCode() + '-');
     }
+
+    const stmts = allCodes.map(code => ({
+        sql: 'INSERT OR IGNORE INTO keys (key_code, hwid, locked, expire_at) VALUES (?, ?, ?, ?)',
+        args: [code, '', locked, expireAt]
+    }));
+    await turso.batch(stmts);
+
+    const result = await turso.execute({
+        sql: 'SELECT key_code FROM keys WHERE key_code IN (' + allCodes.map(() => '?').join(',') + ')',
+        args: allCodes
+    });
+    const keys = result.rows.map(r => r.key_code);
 
     return res.json({ success: true, keys, mode: locked ? 'hwid' : 'all' });
 });
