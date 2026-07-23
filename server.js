@@ -11,9 +11,16 @@ const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const HMAC_SECRET = process.env.HMAC_SECRET || 'bx-' + (process.env.RENDER_SERVICE_ID || 'local-secret-key-2026');
 const SESSION_EXPIRY = 30 * 24 * 60 * 60 * 1000;
 
+const DB_URL = process.env.TURSO_DATABASE_URL;
+const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
+
+if (!DB_URL) {
+    console.error('CRITICAL: TURSO_DATABASE_URL is NOT set! Keys will be lost on restart!');
+}
+
 const turso = createClient({
-    url: process.env.TURSO_DATABASE_URL || 'file:local.db',
-    authToken: process.env.TURSO_AUTH_TOKEN || undefined,
+    url: DB_URL || 'file:local.db',
+    authToken: DB_TOKEN || undefined,
 });
 
 async function initDB() {
@@ -253,26 +260,31 @@ app.get('/api/health', (req, res) => {
 
 initDB().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
+        const dbType = DB_URL ? 'Turso (persistent cloud)' : 'LOCAL FILE (NOT persistent!)';
         console.log('========================================');
         console.log('  Breach X Key Server');
         console.log('  Port: ' + PORT);
-        console.log('  Database: Turso (persistent)');
+        console.log('  Database: ' + dbType);
+        console.log('  DB URL: ' + (DB_URL ? DB_URL.substring(0, 40) + '...' : 'NOT SET'));
+        console.log('  Turso Token: ' + (DB_TOKEN ? 'SET' : 'NOT SET'));
         console.log('========================================');
 
-        // Keep Render free tier alive (spin-down after 15 min)
         const SELF_URL = process.env.RENDER_EXTERNAL_URL;
         if (SELF_URL) {
             const http = require('http');
             const https = require('https');
             const client = SELF_URL.startsWith('https') ? https : http;
+
             setInterval(() => {
                 client.get(SELF_URL + '/api/health', (r) => {
-                    console.log('[KEEPALIVE] ping OK ' + r.statusCode);
+                    console.log('[KEEPALIVE] OK ' + r.statusCode + ' at ' + new Date().toISOString());
                 }).on('error', (e) => {
-                    console.error('[KEEPALIVE] ping failed:', e.message);
+                    console.error('[KEEPALIVE] FAILED:', e.message);
                 });
-            }, 10 * 60 * 1000); // every 10 minutes
-            console.log('  Keep-alive: ' + SELF_URL + ' (every 10 min)');
+            }, 5 * 60 * 1000);
+            console.log('  Keep-alive: ' + SELF_URL + ' (every 5 min)');
+        } else {
+            console.log('  WARNING: RENDER_EXTERNAL_URL not set - no keepalive!');
         }
     });
 }).catch(err => {

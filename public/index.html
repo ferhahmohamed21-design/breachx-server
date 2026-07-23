@@ -499,8 +499,17 @@ async function updateStats() {
 }
 
 async function loadKeys() {
+  if (!SESSION_TOKEN) return;
   const r = await api('/api/keys', { _get: true });
-  if (!r.success) { toast(r.message, false); return; }
+  if (!r.success) {
+    if (r.message === 'Not logged in') {
+      SESSION_TOKEN = '';
+      localStorage.removeItem('bx_session');
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('loginBox').classList.remove('hidden');
+    }
+    return;
+  }
   allKeys = r.keys;
   renderKeys();
 }
@@ -552,7 +561,14 @@ function filterKeys(f, el) {
   renderKeys();
 }
 
-setInterval(() => { if (allKeys.length && !document.getElementById('tabKeys').classList.contains('hidden')) renderKeys(); }, 1000);
+setInterval(() => {
+    if (SESSION_TOKEN) {
+        if (!document.getElementById('tabKeys').classList.contains('hidden')) {
+            loadKeys();
+        }
+        updateStats();
+    }
+}, 15000);
 
 async function revokeKey(code) {
   const r = await api('/api/revoke', { key_code: code });
