@@ -292,19 +292,30 @@ window.onload = function() {
         document.getElementById('passSection').classList.add('hidden');
         document.getElementById('googleSection').classList.remove('hidden');
     }
-    if (SESSION_TOKEN) checkSession();
+    if (SESSION_TOKEN) {
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        checkSession();
+    }
 };
 
 async function checkSession() {
-    const r = await api('/api/auth/check', { token: SESSION_TOKEN });
-    if (r.success) {
+    try {
+        const r = await api('/api/auth/check', { token: SESSION_TOKEN });
+        if (r.success) {
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = r.email;
+            updateStats();
+        } else {
+            SESSION_TOKEN = '';
+            localStorage.removeItem('bx_session');
+        }
+    } catch (e) {
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
-        document.getElementById('userEmail').textContent = r.email;
+        document.getElementById('userEmail').textContent = 'Loading...';
         updateStats();
-    } else {
-        SESSION_TOKEN = '';
-        localStorage.removeItem('bx_session');
     }
 }
 
