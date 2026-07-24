@@ -67,9 +67,18 @@ async function deployCommands(clientId, token, guildId) {
         console.log('[BOT] Deploying slash commands...');
         if (guildId) {
             await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands.map(c => c.toJSON()) });
+            console.log('[BOT] Guild commands deployed to ' + guildId);
         } else {
             await rest.put(Routes.applicationCommands(clientId), { body: commands.map(c => c.toJSON()) });
+            console.log('[BOT] Global commands deployed');
         }
+
+        // Also clear global commands if using guild mode
+        if (guildId) {
+            await rest.put(Routes.applicationCommands(clientId), { body: [] });
+            console.log('[BOT] Global commands cleared');
+        }
+
         console.log('[BOT] Slash commands deployed!');
     } catch (err) {
         console.error('[BOT] Failed to deploy commands:', err.message);
