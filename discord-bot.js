@@ -38,11 +38,7 @@ function createEmbed(title, description, color) {
 }
 
 async function deployCommands(clientId, token, guildId) {
-    const commands = [
-        new SlashCommandBuilder()
-            .setName('starkey')
-            .setDescription('Get a free 24h Breach X key'),
-    ];
+    const commands = [];
 
     const rest = new REST({ version: '10' }).setToken(token);
     try {
@@ -96,9 +92,6 @@ function startBot() {
         const { commandName } = interaction;
 
         try {
-            if (commandName === 'starkey') {
-                await handleStarKey(interaction);
-            }
         } catch (err) {
             console.error('[BOT] Error:', err.message);
             const reply = { embeds: [createEmbed('Error', 'Something went wrong: ' + err.message, RED)], ephemeral: true };
@@ -115,47 +108,6 @@ function startBot() {
     });
 
     return client;
-}
-
-async function handleStarKey(interaction) {
-    if (!isBotActive()) {
-        await interaction.reply({ content: '**Detective Key Loading**\nThe free period has ended. Please try again later.', ephemeral: true });
-        return;
-    }
-
-    const userId = interaction.user.id;
-
-    if (userCooldowns.has(userId)) {
-        const lastUse = userCooldowns.get(userId);
-        const elapsed = Date.now() - lastUse;
-        const cooldown = 24 * 60 * 60 * 1000;
-        if (elapsed < cooldown) {
-            const remaining = Math.ceil((cooldown - elapsed) / (60 * 60 * 1000));
-            await interaction.reply({ content: 'You already got a key! Wait **' + remaining + 'h** before trying again.', ephemeral: true });
-            return;
-        }
-    }
-
-    userCooldowns.set(userId, Date.now());
-
-    const code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-';
-    const expireAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-
-    await turso.execute({
-        sql: 'INSERT INTO keys (key_code, hwid, locked, expire_at, group_name) VALUES (?, ?, ?, ?, ?)',
-        args: [code, '', 0, expireAt, '']
-    });
-
-    const embed = createEmbed('Your Key', 'This key is valid for **24 hours**', GOLD);
-    embed.addFields({ name: 'Key', value: '`' + code + '`', inline: false });
-
-    try {
-        await interaction.user.send({ embeds: [embed] });
-        await interaction.reply({ content: 'Check your DMs!', ephemeral: true });
-    } catch (err) {
-        userCooldowns.delete(userId);
-        await interaction.reply({ content: 'Could not send DM. Make sure your DMs are open.', ephemeral: true });
-    }
 }
 
 module.exports = { startBot, setTurso, setBotActiveGetter };
