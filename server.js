@@ -3,7 +3,7 @@ const { createClient } = require('@libsql/client');
 const crypto = require('crypto');
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
-const { startBot, setTurso } = require('./discord-bot');
+const { startBot, setTurso, setBotActiveGetter } = require('./discord-bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -258,9 +258,49 @@ app.get('/api/health', (req, res) => {
     return res.json({ status: 'ok', ts: Date.now() });
 });
 
+let botActive = true;
+
+app.get('/api/bot-status', (req, res) => {
+    return res.json({ active: botActive });
+});
+
+app.post('/api/bot-toggle', async (req, res) => {
+    const session = requireSession(req);
+    if (!session) return res.json({ success: false, message: 'Not logged in' });
+    botActive = !botActive;
+    if (botClient) {
+        notifyAdminBotToggle(botActive);
+    }
+    return res.json({ success: true, active: botActive });
+});
+
+let botClient = null;
+const ADMIN_DISCORD_ID = '1089940625874485290';
+
+function getBotActive() { return botActive; }
+setBotActiveGetter(getBotActive);
+
+async function notifyAdminBotToggle(active) {
+    if (!botClient) return;
+    try {
+        const user = await botClient.users.fetch(ADMIN_DISCORD_ID);
+        if (user) {
+            const { EmbedBuilder } = require('discord.js');
+            const embed = new EmbedBuilder()
+                .setTitle('Detective Bot Toggle')
+                .setDescription(active ? 'Detective Bot **ACTIVATED**' : 'Detective Bot **DEACTIVATED**')
+                .setColor(active ? 0x44FF66 : 0xFF4444)
+                .setTimestamp();
+            await user.send({ embeds: [embed] });
+        }
+    } catch (e) {
+        console.log('[BOT] Could not DM admin:', e.message);
+    }
+}
+
 initDB().then(() => {
     setTurso(turso);
-    startBot();
+    botClient = startBot();
 
     app.listen(PORT, '0.0.0.0', () => {
         const dbType = DB_URL ? 'Turso (persistent cloud)' : 'LOCAL FILE (NOT persistent!)';

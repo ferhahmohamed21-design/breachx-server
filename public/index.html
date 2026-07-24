@@ -203,6 +203,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
   <div class="tabs">
     <button class="tab active" onclick="switchTab('generate',this)">Generate Keys</button>
     <button class="tab" onclick="switchTab('keys',this)">All Keys</button>
+    <button class="tab" onclick="switchTab('bot',this)">Detective Bot</button>
   </div>
 
   <div class="stats-bar">
@@ -251,6 +252,20 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
           <button class="filter-btn" onclick="filterKeys('expired',this)">Expired</button>
         </div>
         <div class="keys-list" id="keysList"></div>
+      </div>
+    </div>
+
+    <div id="tabBot" class="hidden">
+      <div class="section glass">
+        <div class="section-title">Detective Bot Control</div>
+        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px">Toggle the Discord bot on/off. When OFF, /starkey returns an error to users.</p>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div id="botToggleBtn" onclick="toggleBot()" style="cursor:pointer;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:700;transition:all 0.3s;font-family:'Inter',sans-serif;border:2px solid;display:inline-block;min-width:160px;text-align:center">
+            <span id="botToggleText">Loading...</span>
+          </div>
+          <div id="botStatusDot" style="width:12px;height:12px;border-radius:50%;transition:all 0.3s"></div>
+          <span id="botStatusText" style="font-size:13px;color:rgba(255,255,255,0.5)">Checking...</span>
+        </div>
       </div>
     </div>
   </div>
@@ -332,7 +347,9 @@ function switchTab(tab, el) {
   el.classList.add('active');
   document.getElementById('tabGenerate').classList.toggle('hidden', tab !== 'generate');
   document.getElementById('tabKeys').classList.toggle('hidden', tab !== 'keys');
+  document.getElementById('tabBot').classList.toggle('hidden', tab !== 'bot');
   if (tab === 'keys') loadKeys();
+  if (tab === 'bot') loadBotStatus();
 }
 
 function setMode(mode, el) {
@@ -641,6 +658,48 @@ async function deleteAllInGroup() {
   toast(r.message, r.success);
   loadKeys();
   renderGroupKeys();
+}
+
+let botActiveState = true;
+
+async function loadBotStatus() {
+  const r = await api('/api/bot-status', { _get: true });
+  botActiveState = r.active;
+  updateBotUI();
+}
+
+function updateBotUI() {
+  const btn = document.getElementById('botToggleBtn');
+  const dot = document.getElementById('botStatusDot');
+  const text = document.getElementById('botStatusText');
+  const btnText = document.getElementById('botToggleText');
+  if (botActiveState) {
+    btn.style.background = 'rgba(34,197,94,0.2)';
+    btn.style.borderColor = 'rgba(34,197,94,0.5)';
+    btn.style.color = '#4ade80';
+    btnText.textContent = 'DETECTIVE BOT [ON]';
+    dot.style.background = '#4ade80';
+    dot.style.boxShadow = '0 0 10px #4ade80';
+    text.textContent = 'Bot is ACTIVE - users can get keys';
+    text.style.color = '#4ade80';
+  } else {
+    btn.style.background = 'rgba(239,68,68,0.2)';
+    btn.style.borderColor = 'rgba(239,68,68,0.5)';
+    btn.style.color = '#f87171';
+    btnText.textContent = 'DETECTIVE BOT [OFF]';
+    dot.style.background = '#f87171';
+    dot.style.boxShadow = '0 0 10px #f87171';
+    text.textContent = 'Bot is STOPPED - users cannot get keys';
+    text.style.color = '#f87171';
+  }
+}
+
+async function toggleBot() {
+  const r = await api('/api/bot-toggle', {});
+  if (!r.success) { toast(r.message, false); return; }
+  botActiveState = r.active;
+  updateBotUI();
+  toast(r.active ? 'Detective Bot ACTIVATED' : 'Detective Bot DEACTIVATED', true);
 }
 </script>
 </body>

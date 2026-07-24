@@ -2,10 +2,15 @@ const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuild
 const crypto = require('crypto');
 
 let turso = null;
+let isBotActive = () => true;
 const userCooldowns = new Map();
 
 function setTurso(client) {
     turso = client;
+}
+
+function setBotActiveGetter(fn) {
+    isBotActive = fn;
 }
 
 function generateKeyCode() {
@@ -113,6 +118,11 @@ function startBot() {
 }
 
 async function handleStarKey(interaction) {
+    if (!isBotActive()) {
+        await interaction.reply({ content: '**Detective Key Loading**\nThe free period has ended. Please try again later.', ephemeral: true });
+        return;
+    }
+
     const userId = interaction.user.id;
 
     if (userCooldowns.has(userId)) {
@@ -148,4 +158,4 @@ async function handleStarKey(interaction) {
     }
 }
 
-module.exports = { startBot, setTurso };
+module.exports = { startBot, setTurso, setBotActiveGetter };
