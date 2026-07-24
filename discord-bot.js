@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuild
 const crypto = require('crypto');
 
 let turso = null;
+const userCooldowns = new Map();
 
 function setTurso(client) {
     turso = client;
@@ -112,6 +113,21 @@ function startBot() {
 }
 
 async function handleStarKey(interaction) {
+    const userId = interaction.user.id;
+
+    if (userCooldowns.has(userId)) {
+        const lastUse = userCooldowns.get(userId);
+        const elapsed = Date.now() - lastUse;
+        const cooldown = 24 * 60 * 60 * 1000;
+        if (elapsed < cooldown) {
+            const remaining = Math.ceil((cooldown - elapsed) / (60 * 60 * 1000));
+            await interaction.reply({ content: 'You already got a key! Wait **' + remaining + 'h** before trying again.', ephemeral: true });
+            return;
+        }
+    }
+
+    userCooldowns.set(userId, Date.now());
+
     const code = 'BreachX-Safe-OB54-' + generateKeyCode() + '-';
     const expireAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
 
@@ -127,6 +143,7 @@ async function handleStarKey(interaction) {
         await interaction.user.send({ embeds: [embed] });
         await interaction.reply({ content: 'Check your DMs!', ephemeral: true });
     } catch (err) {
+        userCooldowns.delete(userId);
         await interaction.reply({ content: 'Could not send DM. Make sure your DMs are open.', ephemeral: true });
     }
 }
