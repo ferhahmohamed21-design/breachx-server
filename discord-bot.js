@@ -38,14 +38,6 @@ async function deployCommands(clientId, token, guildId) {
             .setDescription('Get a free 24h Breach X key'),
 
         new SlashCommandBuilder()
-            .setName('generate')
-            .setDescription('Generate new Breach X keys')
-            .addIntegerOption(opt => opt.setName('count').setDescription('Number of keys (1-100)').setRequired(true).setMinValue(1).setMaxValue(100))
-            .addStringOption(opt => opt.setName('mode').setDescription('Lock mode').addChoices({ name: 'One Device (HWID)', value: 'hwid' }, { name: 'All Devices', value: 'all' }).setRequired(false))
-            .addStringOption(opt => opt.setName('expire').setDescription('Expiry: e.g. 7d, 24h, 30m, 60s').setRequired(false))
-            .addStringOption(opt => opt.setName('group').setDescription('Group name (e.g. Premium, Free)').setRequired(false)),
-
-        new SlashCommandBuilder()
             .setName('keycheck')
             .setDescription('Check status of a Breach X key')
             .addStringOption(opt => opt.setName('key').setDescription('The key to check').setRequired(true)),
@@ -115,8 +107,6 @@ function startBot() {
         try {
             if (commandName === 'starkey') {
                 await handleStarKey(interaction);
-            } else if (commandName === 'generate') {
-                await handleGenerate(interaction);
             } else if (commandName === 'keycheck') {
                 await handleKeyCheck(interaction);
             } else if (commandName === 'stats') {
