@@ -1,9 +1,10 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const crypto = require('crypto');
 
 let turso = null;
 let isBotActive = () => true;
 const userCooldowns = new Map();
+const messageTracker = new Map();
 
 function setTurso(client) {
     turso = client;
@@ -74,7 +75,12 @@ function startBot() {
     }
 
     const client = new Client({
-        intents: [GatewayIntentBits.Guilds]
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildMembers
+        ]
     });
 
     client.once('ready', async () => {
@@ -100,6 +106,40 @@ function startBot() {
             } else {
                 await interaction.reply(reply);
             }
+        }
+    });
+
+    client.on('messageCreate', async (message) => {
+        if (message.author.bot) return;
+        if (!message.guild) return;
+
+        const userId = message.author.id;
+        const now = Date.now();
+        const window = 5000;
+        const maxMessages = 3;
+        const timeoutDuration = 60000;
+
+        if (!messageTracker.has(userId)) {
+            messageTracker.set(userId, []);
+        }
+
+        const timestamps = messageTracker.get(userId).filter(t => now - t < window);
+        timestamps.push(now);
+        messageTracker.set(userId, timestamps);
+
+        if (timestamps.length >= maxMessages) {
+            try {
+                const member = await message.guild.members.fetch(userId);
+                if (member && member.moderatable) {
+                    await member.timeout(timeoutDuration, 'Spam detected - 3 messages in 5 seconds');
+                    const embed = createEmbed('Timeout', message.author.tag + ' has been timed out for **1 minute** due to spam.', RED);
+                    await message.channel.send({ embeds: [embed] });
+                    await message.delete().catch(() => {});
+                }
+            } catch (err) {
+                console.log('[BOT] Could not timeout user:', err.message);
+            }
+            messageTracker.delete(userId);
         }
     });
 
