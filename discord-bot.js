@@ -157,9 +157,13 @@ async function handleStarKey(interaction) {
 
     const embed = createEmbed('Your Key', 'This key is valid for **24 hours**', GOLD);
     embed.addFields({ name: 'Key', value: '`' + code + '`', inline: false });
-    embed.addFields({ name: 'Expires', value: '24 hours', inline: true });
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    try {
+        await interaction.user.send({ embeds: [embed] });
+        await interaction.reply({ content: 'Check your DMs!', ephemeral: true });
+    } catch (err) {
+        await interaction.reply({ content: 'Could not send DM. Make sure your DMs are open.', ephemeral: true });
+    }
 }
 
 async function handleGenerate(interaction) {
